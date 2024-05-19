@@ -9,35 +9,18 @@
             background-color: #fff;
             overflow: hidden;
         }
-        #hud {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            padding: 10px;
-            z-index: 100;
-        }
-        .square {
-            width: 40px;
-            height: 40px;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
     </style>
     <script type="importmap">
         {
           "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js"
+            "three": "https://cdn.jsdelivr.net/npm/three@v0.163.0/build/three.module.js",
+            "parametric": "./js/ParametricGeometry.js"
           }
         }
     </script>
 </head>
 <body>
-    <!-- HUD para as teclas-->
-    <div id="hud"></div>
-    <!-- Grua -->
-    <script type="module" src="js/grua.js"></script>
+    <!-- Carousel -->
+    <script type="module" src="js/carousel.js"></script>
 </body>
 </html>
