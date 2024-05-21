@@ -12,9 +12,24 @@ var scene, renderer;
 
 var geometry, material, mesh;
 
-var camera;
+var camera, topCamera, sideCamera, activeCamera;
 
+// Status of key variables (verify if the key is pressed)
 var keyDDown = false;
+var key1Down = false;
+var key2Down = false;
+var key3Down = false;
+var keyQDown = false;
+var keyWDown = false;
+var keyEDown = false;
+var key4Down = false;
+var key5Down = false;
+var key6Down = false;
+
+// VSClock
+const clock = new THREE.Clock();
+
+var r1Group, r2Group, r3Group;
 
 /////////////////////
 /* CREATE SCENE(S) */
@@ -57,17 +72,138 @@ function addCylinder(obj, x, y, z){
 
 }
 
+function addRing(obj, x, y, z, radius) {
+    'use strict';
+
+    const tubeRadius = 1.5; 
+    const radialSegments = 9; 
+    const tubularSegments = 64; 
+    const arc = Math.PI * 2;
+
+    // To create the circular path for the TubeGeometry
+    const path = new THREE.Curve();
+    path.getPoint = function (t) {
+        const angle = t * arc;
+        return new THREE.Vector3(radius * Math.cos(angle), radius * Math.sin(angle), 0);
+    };
+
+    geometry = new THREE.TubeGeometry(path, tubularSegments, tubeRadius, radialSegments, true);
+    material = new THREE.MeshBasicMaterial({ color: '#ADD8E6' , wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    mesh.rotation.x = Math.PI / 2;
+    obj.add(mesh);
+    return mesh;
+}
+
+function hyperboloid(u, v, target) {
+    u *= 2 * Math.PI;
+    v = v * 2 - 1; // Remapeia v de [0,1] para [-1,1]
+    const x = Math.sinh(v) * Math.cos(u);
+    const y = Math.sinh(v) * Math.sin(u);
+    const z = Math.cosh(v);
+    target.set(x, y, z);
+}
+
+
+function addParametricSurfacesToRing(ring, radius) {
+    const segmentAngle = 2 * Math.PI / 8; // 45 graus em radianos
+    for (let i = 0; i < 8; i++) {
+        geometry = new PARAMETRIC.ParametricGeometry(hyperboloid, 10, 10);
+        material = new THREE.MeshBasicMaterial({ color: new THREE.Color(`hsl(${i * 45}, 100%, 50%)`), wireframe: true });
+        mesh = new THREE.Mesh(geometry, material);
+        
+        // Posicionamento
+        const angle = i * segmentAngle;
+        mesh.position.x = radius * Math.cos(angle);
+        mesh.position.y = radius * Math.sin(angle);
+
+        mesh.rotation.y = Math.PI/2; // Ajustar orientação para enfrentar o centro
+
+        // Criação de um pivô para rotação
+        const pivot = new THREE.Object3D();
+        pivot.position.set(mesh.position.x, 0, mesh.position.z); // Colocar o pivô no local correto
+        pivot.add(mesh); // Adiciona a malha ao pivô, não diretamente ao anel
+        ring.add(pivot);
+
+        // Alinhar a malha no pivô para olhar para fora
+        mesh.position.set(0, 0, 0); // Resetar a posição da malha no pivô
+        mesh.lookAt(pivot.position); // Faz a malha olhar para o pivô, ajustando assim para fora
+
+        // Definir propriedade para animação
+        pivot.userData = { speed: 0.02 * (i + 0.5) }; // Velocidades variadas
+    }
+}
+
+function addSurface(obj, x, y, z, radius, i) {
+
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    geometry = new THREE.CylinderGeometry(1,1,2,32);
+    material = new THREE.MeshBasicMaterial({color: '#ADD8E6', wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y, 
+        z + radius * Math.sin(angle));
+    obj.add(mesh);
+
+    // Adiciona velocidade de rotação
+    mesh.userData.rotationSpeed = 0.01; // Velocidade de rotação constante
+
+}
+
+
 //E NECESSARIO UM ARRAY COM TODOS OS VERTICES DA FAIXA DE MOBIUS
 // A FAIXA E CONSTITUIDA POR TRIANGULOS
 // OS VERTICES QUE TEM A FAIXA SAO OS VERTICES DO TRIANGULO
 // MAYBE USAR UM BUFFER GEOMETRY PARA ISTO
 
 function createCarrousel(x, y, z){
-    'use strict';createCarrousel
+    'use strict';
+
     var carrousel = new THREE.Object3D();
+
+    // Cria grupos para cada anel para melhor organização e manipulação
+    r1Group = new THREE.Object3D();
+    r2Group = new THREE.Object3D();
+    r3Group = new THREE.Object3D();
+
+    const r1Radius = 3.5;
+    const r2Radius = 6.5;
+    const r3Radius = 9.5
+
     addMobiusStrip(carrousel, 0, 12, 0);
     addCylinder(carrousel, 0, 0, 0);
+
+    // Adiciona anéis a seus respectivos grupos
+    carrousel.innerRing = addRing(r1Group, 0, 0, 0, r1Radius); 
+    carrousel.middleRing = addRing(r2Group, 0, 0, 0, r2Radius); 
+    carrousel.outerRing = addRing(r3Group, 0, 0, 0, r3Radius); 
+
+    // Adiciona grupos ao carrossel principal
+    carrousel.add(r1Group);
+    carrousel.add(r2Group);
+    carrousel.add(r3Group);
+
+    //addParametricSurfacesToRing(carrousel.innerRing, 3.50);
+    //addParametricSurfacesToRing(carrousel.middleRing, 6.50);
+    //addParametricSurfacesToRing(carrousel.outerRing, 9.50);
+
+    // Exemplo: adiciona 8 superfícies ao redor do 'innerRing'
+    for (let i = 0; i < 8; i++) {
+        addSurface(r1Group, 0, 2.4, 0, r1Radius, i);
+        addSurface(r2Group, 0, 2.4, 0, r2Radius, i);
+        addSurface(r3Group, 0, 2.4, 0, r3Radius, i);
+    }
+    
+    carrousel.add(r1Group);
+    carrousel.add(r2Group);
+    carrousel.add(r3Group);
+
     scene.add(carrousel);
+
     carrousel.position.set(x, y, z);
 }
 
@@ -82,17 +218,45 @@ function createScene(){
 //////////////////////
 /* CREATE CAMERA(S) */
 //////////////////////
+
 function createCamera() {
     'use strict';
+    
     camera = new THREE.PerspectiveCamera(70,
-                                         window.innerWidth / window.innerHeight,
+                                        window.innerWidth / window.innerHeight,
                                          1,
                                          1000);
-    camera.position.x = 50;
-    camera.position.y = 50;
-    camera.position.z = 50;
-    camera.lookAt(scene.position);
-}
+    camera.position.x = 20;
+    camera.position.y = 20;
+    camera.position.z = 20;
+    camera.lookAt(scene.position); 
+
+    // Top Camera 
+    topCamera = new THREE.PerspectiveCamera(15, window.innerWidth / window.innerHeight, 1, 1000);
+    topCamera.position.set(0, 200, 0);
+    topCamera.lookAt(new THREE.Vector3(0, 0, 0)); 
+
+    // Side Camera
+    sideCamera = new THREE.PerspectiveCamera(7, window.innerWidth / window.innerHeight, 1, 1000);
+    sideCamera.position.set(200, 5, 0);
+    sideCamera.lookAt(new THREE.Vector3(0, 0, 0));
+} 
+/*
+function createCamera(scene) {
+    'use strict';
+
+    // Calcula a proporção de aspecto da janela
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    const d = 50; // Define o tamanho da visão da câmera
+
+    // Cria a câmera ortográfica
+    const camera = new THREE.OrthographicCamera(-d * aspectRatio, d * aspectRatio, d, -d, 1, 1000);
+    camera.position.set(0, 50, 0); // Posiciona a câmera acima do centro da cena
+    camera.lookAt(scene.position); // Direciona a câmera para olhar para o centro da cena
+
+    return camera;
+} */
+
 
 
 /////////////////////
@@ -136,12 +300,37 @@ function handleCollisions(){
 ////////////
 /* UPDATE */
 ////////////
-function update(){
+function update(delta){
     'use strict';
 
-    if(keyDDown){
-        
-    }
+    if(keyDDown) {}
+    
+    if (key1Down) { r1Group.position.y += (2 * delta); }
+
+    if (keyQDown) { r1Group.position.y -= (2 * delta); }
+
+    if (key2Down) { r2Group.position.y += (2 * delta); }
+
+    if (keyWDown) { r2Group.position.y -= (2 * delta); }
+
+    if (key3Down) { r3Group.position.y += (2 * delta); }
+
+    if (keyEDown) { r3Group.position.y -= (2 * delta); }
+
+    if (key4Down) { activeCamera = topCamera; }
+
+    if (key5Down) { activeCamera = camera; }
+
+    if (key6Down) { activeCamera = sideCamera; }
+
+    scene.traverse(function(object) {
+        if (object.userData.rotationSpeed) {
+            // Rotação constante em torno do eixo Y
+            object.rotateY(object.userData.rotationSpeed * delta);
+        }
+    });
+
+
 }
 
 /////////////
@@ -149,7 +338,8 @@ function update(){
 /////////////
 function render() {
     'use strict';
-    renderer.render(scene, camera);
+
+    renderer.render(scene, activeCamera);
 }
 
 ////////////////////////////////
@@ -165,12 +355,14 @@ function init() {
 
     createScene();
     createCamera();
+    activeCamera = camera;
     createAmbientLight();
 
     render();
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("resize", onResize);
+    window.addEventListener("keyup", onKeyUp);
 }
 
 /////////////////////
@@ -178,7 +370,12 @@ function init() {
 /////////////////////
 function animate() {
     'use strict';
-    update();
+
+    const delta = clock.getDelta();
+
+    requestAnimationFrame(animate);
+
+    update(delta);
     render();
 }
 
@@ -196,6 +393,42 @@ function onResize() {
 function onKeyDown(e) {
     'use strict';
 
+    switch (e.keyCode) {
+        case 49: // Tecla '1'
+            key1Down = true;
+            break;
+        case 50: // Tecla '2'
+            key2Down = true;
+            break;
+        case 51: // Tecla '3'
+            key3Down = true;
+            break;
+        case 81: // Q
+            keyQDown = true;
+            break;
+        case 87: // W
+            keyWDown = true;
+            break;
+        case 69: // E
+            keyEDown = true;
+            break;
+        case 52: // '4'
+            key4Down = true;
+            break;
+        case 53: // '5'
+            key5Down = true;
+            break;
+        case 54: // '6'
+            key6Down = true;
+            break;
+        
+    }
+
+    if (key1Down || key2Down || key3Down || keyQDown || keyWDown || keyEDown) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
 }
 
 ///////////////////////
@@ -203,6 +436,38 @@ function onKeyDown(e) {
 ///////////////////////
 function onKeyUp(e){
     'use strict';
+
+    switch (e.keyCode) {
+        case 49: // Tecla '1'
+            key1Down = false;
+            break;
+        case 50: // Tecla '2'
+            key2Down = false;
+            break;
+        case 51: // Tecla '3'
+            key3Down = false;
+            break;
+        case 81: // Q
+            keyQDown = false;
+            break;
+        case 87: // W
+            keyWDown = false;
+            break;
+        case 69: // E
+            keyEDown = false;
+            break;
+        case 52: // '4'
+            key4Down = false;
+            break;
+        case 53: // '5'
+            key5Down = false;
+            break;
+        case 54: // '6'
+            key6Down = false;
+            break;
+        
+
+    }
 }
 
 init();
