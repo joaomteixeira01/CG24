@@ -64,7 +64,7 @@ function addMobiusStrip(obj, x, y, z) {
 function addCylinder(obj, x, y, z){
     'use strict';
 
-    geometry = new THREE.CylinderGeometry(2, 2, 3.5, 32);
+    geometry = new THREE.CylinderGeometry(2, 2, 3, 32);
     material = new THREE.MeshBasicMaterial({color: '#ADD8E6', wireframe: true});
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
