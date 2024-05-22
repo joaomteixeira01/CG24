@@ -69,10 +69,10 @@ function addMobiusStrip(obj, x, y, z) {
     obj.add(mesh);
 }
 
-function addCylinder(obj, x, y, z){
+function addCylinder(obj, x, y, z, radius, height){
     'use strict';
 
-    geometry = new THREE.CylinderGeometry(2, 2, 3, 32);
+    geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
     material = new THREE.MeshBasicMaterial({color: '#ADD8E6', wireframe: true});
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
@@ -80,29 +80,36 @@ function addCylinder(obj, x, y, z){
 
 }
 
-function addRing(obj, x, y, z, radius) {
+function addRing(scene, x, y, z, innerRadius) {
     'use strict';
 
-    const tubeRadius = 1.5; 
-    const radialSegments = 9; 
-    const tubularSegments = 64; 
-    const arc = Math.PI * 2;
+    const outerRadius = innerRadius + 2;    // 2 is the value of the rings width
+    const thickness = 3;                    // Must be equal to the cylinder hight
 
-    // To create the circular path for the TubeGeometry
-    const path = new THREE.Curve();
-    path.getPoint = function (t) {
-        const angle = t * arc;
-        return new THREE.Vector3(radius * Math.cos(angle), radius * Math.sin(angle), 0);
+    // Creates a circle
+    const shape = new THREE.Shape();
+    shape.absarc(0, 0, outerRadius, 0, Math.PI * 2, false);  // External cicrlce
+    const hole = new THREE.Path();
+    hole.absarc(0, 0, innerRadius, 0, Math.PI * 2, true);    // Internal circle with a hole
+    shape.holes.push(hole);
+
+    // Define as opções de extrusão
+    const extrudeSettings = {
+        steps: 2,           // Número de pontos ao longo da extrusão
+        depth: thickness,   // A profundidade da extrusão
+        bevelEnabled: false // Desativa o bisel para manter as faces planas
     };
 
-    geometry = new THREE.TubeGeometry(path, tubularSegments, tubeRadius, radialSegments, true);
-    material = new THREE.MeshBasicMaterial({ color: '#ADD8E6' , wireframe: true});
-    mesh = new THREE.Mesh(geometry, material);
+    // Cria a geometria extrudada a partir da forma
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    const material = new THREE.MeshBasicMaterial({ color: '#ADD8E6', wireframe: true });
+    const mesh = new THREE.Mesh(geometry, material);
+
     mesh.position.set(x, y, z);
-    mesh.rotation.x = Math.PI / 2;
-    obj.add(mesh);
-    return mesh;
+    mesh.rotation.x = Math.PI/2;
+    scene.add(mesh);
 }
+
 
 function hyperboloid(u, v, target) {
     u *= 2 * Math.PI;
@@ -112,7 +119,6 @@ function hyperboloid(u, v, target) {
     const z = Math.cosh(v);
     target.set(x, y, z);
 }
-
 
 function addParametricSurfacesToRing(ring, radius) {
     const segmentAngle = 2 * Math.PI / 8; // 45 graus em radianos
@@ -173,39 +179,35 @@ function createCarrousel(x, y, z){
 
     var carrousel = new THREE.Object3D();
 
-    // Cria grupos para cada anel para melhor organização e manipulação
+    // ---- DIMENTIONS ----
+    const cylinderRadius = 2;
+    const cylinderHeight = 3;
+    const ringsWidth = 2;
+    const r1InnerRadius = cylinderRadius + 0.1;
+    const r2InnerRadius = r1InnerRadius + ringsWidth + 0.1;
+    const r3InnerRadius = r2InnerRadius + ringsWidth + 0.1;
+
+    // Create groups for better manipulation
     r1Group = new THREE.Object3D();
     r2Group = new THREE.Object3D();
     r3Group = new THREE.Object3D();
 
-    const r1Radius = 3.5;
-    const r2Radius = 6.5;
-    const r3Radius = 9.5
+    //addMobiusStrip(carrousel, 0, 12, 0);
+    addCylinder(carrousel, 0, 0, 0, cylinderRadius, cylinderHeight);
 
-    addMobiusStrip(carrousel, 0, 12, 0);
-    addCylinder(carrousel, 0, 0, 0);
+    // Adds rings to each group
+    carrousel.innerRing = addRing(r1Group, 0, cylinderHeight/2, 0, r1InnerRadius); 
+    carrousel.middleRing = addRing(r2Group, 0, cylinderHeight/2, 0, r2InnerRadius); 
+    carrousel.outerRing = addRing(r3Group, 0, cylinderHeight/2, 0, r3InnerRadius); 
 
-    // Adiciona anéis a seus respectivos grupos
-    carrousel.innerRing = addRing(r1Group, 0, 0, 0, r1Radius); 
-    carrousel.middleRing = addRing(r2Group, 0, 0, 0, r2Radius); 
-    carrousel.outerRing = addRing(r3Group, 0, 0, 0, r3Radius); 
-
-    // Adiciona grupos ao carrossel principal
-    carrousel.add(r1Group);
-    carrousel.add(r2Group);
-    carrousel.add(r3Group);
-
-    //addParametricSurfacesToRing(carrousel.innerRing, 3.50);
-    //addParametricSurfacesToRing(carrousel.middleRing, 6.50);
-    //addParametricSurfacesToRing(carrousel.outerRing, 9.50);
-
-    // Exemplo: adiciona 8 superfícies ao redor do 'innerRing'
+    // Adds 8 surfaces to each ring
     for (let i = 0; i < 8; i++) {
-        addSurface(r1Group, 0, 2.4, 0, r1Radius, i);
-        addSurface(r2Group, 0, 2.4, 0, r2Radius, i);
-        addSurface(r3Group, 0, 2.4, 0, r3Radius, i);
+        addSurface(r1Group, 0, 2.5, 0, r1InnerRadius+(ringsWidth/2), i);
+        addSurface(r2Group, 0, 2.5, 0, r2InnerRadius+(ringsWidth/2), i);
+        addSurface(r3Group, 0, 2.5, 0, r3InnerRadius+(ringsWidth/2), i);
     }
-    
+
+    // Adds groups to the Carrousel
     carrousel.add(r1Group);
     carrousel.add(r2Group);
     carrousel.add(r3Group);
@@ -232,244 +234,4 @@ function createCamera() {
     
     camera = new THREE.PerspectiveCamera(70,
                                         window.innerWidth / window.innerHeight,
-                                         1,
-                                         1000);
-    camera.position.x = 20;
-    camera.position.y = 20;
-    camera.position.z = 20;
-    camera.lookAt(scene.position); 
-
-    // Top Camera 
-    topCamera = new THREE.PerspectiveCamera(15, window.innerWidth / window.innerHeight, 1, 1000);
-    topCamera.position.set(0, 200, 0);
-    topCamera.lookAt(new THREE.Vector3(0, 0, 0)); 
-
-    // Side Camera
-    sideCamera = new THREE.PerspectiveCamera(7, window.innerWidth / window.innerHeight, 1, 1000);
-    sideCamera.position.set(200, 5, 0);
-    sideCamera.lookAt(new THREE.Vector3(0, 0, 0));
-} 
-/*
-function createCamera(scene) {
-    'use strict';
-
-    // Calcula a proporção de aspecto da janela
-    const aspectRatio = window.innerWidth / window.innerHeight;
-    const d = 50; // Define o tamanho da visão da câmera
-
-    // Cria a câmera ortográfica
-    const camera = new THREE.OrthographicCamera(-d * aspectRatio, d * aspectRatio, d, -d, 1, 1000);
-    camera.position.set(0, 50, 0); // Posiciona a câmera acima do centro da cena
-    camera.lookAt(scene.position); // Direciona a câmera para olhar para o centro da cena
-
-    return camera;
-} */
-
-
-
-/////////////////////
-/* CREATE LIGHT(S) */
-/////////////////////
-
-function createAmbientLight() {
-    'use strict';
-    const ambientLight = new THREE.AmbientLight(0xFFA500, 0.2);
-    scene.add(ambientLight);
-}
-
-function turnOnDirectionalLight(){
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(1, 1, 1); 
-    directionalLight.target.position.set(0, 0, 0); 
-    scene.add(directionalLight);
-    scene.add(directionalLight.target);
-}
-
-////////////////////////
-/* CREATE OBJECT3D(S) */
-////////////////////////
-
-//////////////////////
-/* CHECK COLLISIONS */
-//////////////////////
-function checkCollisions(){
-    'use strict';
-
-}
-
-///////////////////////
-/* HANDLE COLLISIONS */
-///////////////////////
-function handleCollisions(){
-    'use strict';
-
-}
-
-////////////
-/* UPDATE */
-////////////
-function update(delta){
-    'use strict';
-
-    if(keyDDown) {}
-    
-    if (!key1Down) { 
-        console.log('Starting movement position ->', (r1Group.position.y));
-        r1Group.position.y += (2 * delta) * r1Direction;
-        console.log('MOVING!!!\n position ->', (r1Group.position.y));
-        if (r1Group.position.y >= upperLimit || r1Group.position.y <= lowerLimit) {
-            console.log('CHANGING DIRECTION!!!');
-            r1Direction *= -1; // Inverte a direção se atingir os limites
-        } 
-    }
-
-    if (keyQDown) { r1Group.position.y -= (2 * delta); }
-
-    if (!key2Down) { 
-        r2Group.position.y += (2 * delta) * r2Direction;
-        if (r2Group.position.y >= upperLimit || r2Group.position.y <= lowerLimit) {
-            r2Direction *= -1;
-        }    
-    }
-
-    if (keyWDown) { r2Group.position.y -= (2 * delta); }
-
-    if (!key3Down) { 
-        r3Group.position.y += (2 * delta) * r3Direction; 
-        if (r3Group.position.y >= upperLimit || r3Group.position.y <= lowerLimit) {
-            r3Direction *= -1;
-        }
-    }
-
-    if (keyEDown) { r3Group.position.y -= (2 * delta); }
-
-    if (key4Down) { activeCamera = topCamera; }
-
-    if (key5Down) { activeCamera = camera; }
-
-    if (key6Down) { activeCamera = sideCamera; }
-
-    scene.traverse(function(object) {
-        if (object.userData.rotationSpeed) {
-            // Rotação constante em torno do eixo Y
-            object.rotateY(object.userData.rotationSpeed * delta);
-        }
-    });
-
-
-}
-
-/////////////
-/* DISPLAY */
-/////////////
-function render() {
-    'use strict';
-
-    renderer.render(scene, activeCamera);
-}
-
-////////////////////////////////
-/* INITIALIZE ANIMATION CYCLE */
-////////////////////////////////
-function init() {
-    'use strict';
-    renderer = new THREE.WebGLRenderer({
-        antialias: true
-    });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    createScene();
-    createCamera();
-    activeCamera = camera;
-    createAmbientLight();
-
-    render();
-
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("resize", onResize);
-    window.addEventListener("keyup", onKeyUp);
-}
-
-/////////////////////
-/* ANIMATION CYCLE */
-/////////////////////
-function animate() {
-    'use strict';
-
-    const delta = clock.getDelta();
-
-    requestAnimationFrame(animate);
-
-    update(delta);
-    render();
-}
-
-////////////////////////////
-/* RESIZE WINDOW CALLBACK */
-////////////////////////////
-function onResize() { 
-    'use strict';
-
-}
-
-///////////////////////
-/* KEY DOWN CALLBACK */
-///////////////////////
-function onKeyDown(e) {
-    'use strict';
-
-    switch (e.keyCode) {
-        
-        case 49: // Tecla '1'
-            key1Down = !key1Down;
-            break;
-        case 50: // Tecla '2'
-            key2Down = !key2Down;
-            break;
-        case 51: // Tecla '3'
-            key3Down = !key3Down;
-            break;
-        case 52: // '4'
-            key4Down = true;
-            break;
-        case 53: // '5'
-            key5Down = true;
-            break;
-        case 54: // '6'
-            key6Down = true;
-            break;
-        
-    }
-
-    if (key1Down || key2Down || key3Down || keyQDown || keyWDown || keyEDown) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-}
-
-///////////////////////
-/* KEY UP CALLBACK */
-///////////////////////
-function onKeyUp(e){
-    'use strict';
-
-    switch (e.keyCode) {
-
-        case 52: // '4'
-            key4Down = false;
-            break;
-        case 53: // '5'
-            key5Down = false;
-            break;
-        case 54: // '6'
-            key6Down = false;
-            break;
-        
-
-    }
-}
-
-init();
-animate();
+  
