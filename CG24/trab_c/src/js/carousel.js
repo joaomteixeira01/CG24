@@ -154,8 +154,14 @@ function addSurface(obj, x, y, z, radius, i) {
     const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
     const angle = segmentAngle * i; // Calcula o ângulo para a posição i
 
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
     geometry = new THREE.CylinderGeometry(1,1,2,32);
-    material = new THREE.MeshBasicMaterial({color: '#ADD8E6', wireframe: true});
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
@@ -192,7 +198,7 @@ function createCarrousel(x, y, z){
     r2Group = new THREE.Object3D();
     r3Group = new THREE.Object3D();
 
-    //addMobiusStrip(carrousel, 0, 12, 0);
+    addMobiusStrip(carrousel, 0, 12, 0);
     addCylinder(carrousel, 0, 0, 0, cylinderRadius, cylinderHeight);
 
     // Adds rings to each group
