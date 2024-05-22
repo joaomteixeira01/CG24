@@ -202,6 +202,7 @@ function createCarrousel(x, y, z){
 
     // Adds 8 surfaces to each ring
     for (let i = 0; i < 8; i++) {
+        // tamanho da base das superficies deve ter em conta ringsWidth
         addSurface(r1Group, 0, 2.5, 0, r1InnerRadius+(ringsWidth/2), i);
         addSurface(r2Group, 0, 2.5, 0, r2InnerRadius+(ringsWidth/2), i);
         addSurface(r3Group, 0, 2.5, 0, r3InnerRadius+(ringsWidth/2), i);
@@ -234,4 +235,244 @@ function createCamera() {
     
     camera = new THREE.PerspectiveCamera(70,
                                         window.innerWidth / window.innerHeight,
-  
+                                         1,
+                                         1000);
+    camera.position.x = 20;
+    camera.position.y = 20;
+    camera.position.z = 20;
+    camera.lookAt(scene.position); 
+
+    // Top Camera 
+    topCamera = new THREE.PerspectiveCamera(15, window.innerWidth / window.innerHeight, 1, 1000);
+    topCamera.position.set(0, 200, 0);
+    topCamera.lookAt(new THREE.Vector3(0, 0, 0)); 
+
+    // Side Camera
+    sideCamera = new THREE.PerspectiveCamera(7, window.innerWidth / window.innerHeight, 1, 1000);
+    sideCamera.position.set(200, 5, 0);
+    sideCamera.lookAt(new THREE.Vector3(0, 0, 0));
+} 
+/*
+function createCamera(scene) {
+    'use strict';
+
+    // Calcula a proporção de aspecto da janela
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    const d = 50; // Define o tamanho da visão da câmera
+
+    // Cria a câmera ortográfica
+    const camera = new THREE.OrthographicCamera(-d * aspectRatio, d * aspectRatio, d, -d, 1, 1000);
+    camera.position.set(0, 50, 0); // Posiciona a câmera acima do centro da cena
+    camera.lookAt(scene.position); // Direciona a câmera para olhar para o centro da cena
+
+    return camera;
+} */
+
+
+
+/////////////////////
+/* CREATE LIGHT(S) */
+/////////////////////
+
+function createAmbientLight() {
+    'use strict';
+    const ambientLight = new THREE.AmbientLight(0xFFA500, 0.2);
+    scene.add(ambientLight);
+}
+
+function turnOnDirectionalLight(){
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(1, 1, 1); 
+    directionalLight.target.position.set(0, 0, 0); 
+    scene.add(directionalLight);
+    scene.add(directionalLight.target);
+}
+
+////////////////////////
+/* CREATE OBJECT3D(S) */
+////////////////////////
+
+//////////////////////
+/* CHECK COLLISIONS */
+//////////////////////
+function checkCollisions(){
+    'use strict';
+
+}
+
+///////////////////////
+/* HANDLE COLLISIONS */
+///////////////////////
+function handleCollisions(){
+    'use strict';
+
+}
+
+////////////
+/* UPDATE */
+////////////
+function update(delta){
+    'use strict';
+
+    if(keyDDown) {}
+    
+    if (!key1Down) { 
+        console.log('Starting movement position ->', (r1Group.position.y));
+        r1Group.position.y += (2 * delta) * r1Direction;
+        console.log('MOVING!!!\n position ->', (r1Group.position.y));
+        if (r1Group.position.y >= upperLimit || r1Group.position.y <= lowerLimit) {
+            console.log('CHANGING DIRECTION!!!');
+            r1Direction *= -1; // Inverte a direção se atingir os limites
+        } 
+    }
+
+    if (keyQDown) { r1Group.position.y -= (2 * delta); }
+
+    if (!key2Down) { 
+        r2Group.position.y += (2 * delta) * r2Direction;
+        if (r2Group.position.y >= upperLimit || r2Group.position.y <= lowerLimit) {
+            r2Direction *= -1;
+        }    
+    }
+
+    if (keyWDown) { r2Group.position.y -= (2 * delta); }
+
+    if (!key3Down) { 
+        r3Group.position.y += (2 * delta) * r3Direction; 
+        if (r3Group.position.y >= upperLimit || r3Group.position.y <= lowerLimit) {
+            r3Direction *= -1;
+        }
+    }
+
+    if (keyEDown) { r3Group.position.y -= (2 * delta); }
+
+    if (key4Down) { activeCamera = topCamera; }
+
+    if (key5Down) { activeCamera = camera; }
+
+    if (key6Down) { activeCamera = sideCamera; }
+
+    scene.traverse(function(object) {
+        if (object.userData.rotationSpeed) {
+            // Rotação constante em torno do eixo Y
+            object.rotateY(object.userData.rotationSpeed * delta);
+        }
+    });
+
+
+}
+
+/////////////
+/* DISPLAY */
+/////////////
+function render() {
+    'use strict';
+
+    renderer.render(scene, activeCamera);
+}
+
+////////////////////////////////
+/* INITIALIZE ANIMATION CYCLE */
+////////////////////////////////
+function init() {
+    'use strict';
+    renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    createScene();
+    createCamera();
+    activeCamera = camera;
+    createAmbientLight();
+
+    render();
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("keyup", onKeyUp);
+}
+
+/////////////////////
+/* ANIMATION CYCLE */
+/////////////////////
+function animate() {
+    'use strict';
+
+    const delta = clock.getDelta();
+
+    requestAnimationFrame(animate);
+
+    update(delta);
+    render();
+}
+
+////////////////////////////
+/* RESIZE WINDOW CALLBACK */
+////////////////////////////
+function onResize() { 
+    'use strict';
+
+}
+
+///////////////////////
+/* KEY DOWN CALLBACK */
+///////////////////////
+function onKeyDown(e) {
+    'use strict';
+
+    switch (e.keyCode) {
+        
+        case 49: // Tecla '1'
+            key1Down = !key1Down;
+            break;
+        case 50: // Tecla '2'
+            key2Down = !key2Down;
+            break;
+        case 51: // Tecla '3'
+            key3Down = !key3Down;
+            break;
+        case 52: // '4'
+            key4Down = true;
+            break;
+        case 53: // '5'
+            key5Down = true;
+            break;
+        case 54: // '6'
+            key6Down = true;
+            break;
+        
+    }
+
+    if (key1Down || key2Down || key3Down || keyQDown || keyWDown || keyEDown) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+}
+
+///////////////////////
+/* KEY UP CALLBACK */
+///////////////////////
+function onKeyUp(e){
+    'use strict';
+
+    switch (e.keyCode) {
+
+        case 52: // '4'
+            key4Down = false;
+            break;
+        case 53: // '5'
+            key5Down = false;
+            break;
+        case 54: // '6'
+            key6Down = false;
+            break;
+        
+
+    }
+}
+
+init();
+animate();
