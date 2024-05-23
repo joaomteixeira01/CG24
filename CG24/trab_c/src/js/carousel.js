@@ -56,6 +56,8 @@ var r1Direction = 1; // 1 para subir, -1 para descer
 var r2Direction = 1; // Inicialmente subindo
 var r3Direction = 1;
 
+const imagePath = '../assets/image.jpg';
+
 /////////////////////
 /* CREATE SCENE(S) */
 /////////////////////
@@ -241,12 +243,32 @@ function createCarrousel(x, y, z){
     carrousel.position.set(x, y, z);
 }
 
+function addSkydome(x, y, z) {
+    'use strict';
+
+    // Sphere dimentions
+    const radius = 20;
+    const widthSegments = 60;
+    const heighhtSegments = 20;
+
+    let texture = new THREE.TextureLoader().load(imagePath);
+
+    material = new THREE.MeshBasicMaterial({map: texture, side: THREE.BackSide});
+    geometry = new THREE.SphereGeometry(radius, widthSegments, heighhtSegments);
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    scene.add(mesh);
+}
+
 function createScene(){
     'use strict';
 
     scene = new THREE.Scene();
     scene.add(new THREE.AxesHelper(10));
+
     createCarrousel(0, 0, 0);
+
+    addSkydome(0,0,0);
 }
 
 //////////////////////
