@@ -52,6 +52,32 @@ var r1Group, r2Group, r3Group;
 var upperLimit = 7.5; // altura do mobiusStrip - altura das pecas
 var lowerLimit = 0;
 
+//Surface 1 Dimensions - Cylinder
+var radiusCylinder = 1;
+var heightCylinder = 2;
+
+//Surface 2 Dimensions - Parallelepiped
+var widthParallelepiped = Math.sqrt(2);
+var heightParallelepiped = 2;
+var depthParallelepiped = Math.sqrt(2);
+
+//Surface 3 Dimensions - Quadrangular Pyramid
+var baseQuadPyramid = 2;
+var heightQuadPyramid = 2;
+
+//Surface 4 Dimensions - Cone cutted
+var radiusConeCutted1 = 1;
+var radiusConeCutted2 = 0.5;
+var heightConeCutted = 2;
+
+// Surface 5 Dimensions - Cone
+var radiusCone = 1;
+var heightCone = 2;
+
+// Surface 6 Dimensions - Hexagonal Prism
+var radiusHexagonalPrism = 1;
+var heightHexagonalPrism = 2;
+
 var r1Direction = 1; // 1 para subir, -1 para descer
 var r2Direction = 1; // Inicialmente subindo
 var r3Direction = 1;
@@ -139,37 +165,106 @@ function hyperboloid(u, v, target) {
     target.set(x, y, z);
 }
 
-function addParametricSurfacesToRing(ring, radius) {
-    const segmentAngle = 2 * Math.PI / 8; // 45 graus em radianos
-    for (let i = 0; i < 8; i++) {
-        geometry = new PARAMETRIC.ParametricGeometry(hyperboloid, 10, 10);
-        material = materials[currentMaterialKey];
-        mesh = new THREE.Mesh(geometry, material);
-        
-        // Posicionamento
-        const angle = i * segmentAngle;
-        mesh.position.x = radius * Math.cos(angle);
-        mesh.position.y = radius * Math.sin(angle);
+function cylinder(u, v, target) {
+    const angle = 2 * Math.PI * u;  
+    const x = radiusCylinder * Math.cos(angle);
+    const y = heightCylinder * (v - 0.5); // Altura centrada em y = 0
+    const z = radiusCylinder * Math.sin(angle);
+            
+    target.set(x, y, z);
+}
 
-        mesh.rotation.y = Math.PI/2; // Ajustar orientação para enfrentar o centro
+function parallelepiped(u, v, target, face) {
+    const x = (u - 0.5) * widthParallelepiped;
+    const y = (v - 0.5) * heightParallelepiped;
+    const z = (v - 0.5) * depthParallelepiped;
 
-        // Criação de um pivô para rotação
-        const pivot = new THREE.Object3D();
-        pivot.position.set(mesh.position.x, 0, mesh.position.z); // Colocar o pivô no local correto
-        pivot.add(mesh); // Adiciona a malha ao pivô, não diretamente ao anel
-        ring.add(pivot);
-
-        // Alinhar a malha no pivô para olhar para fora
-        mesh.position.set(0, 0, 0); // Resetar a posição da malha no pivô
-        mesh.lookAt(pivot.position); // Faz a malha olhar para o pivô, ajustando assim para fora
-
-        // Definir propriedade para animação
-        pivot.userData = { speed: 0.02 * (i + 0.5) }; // Velocidades variadas
+    switch(face) {
+        case 0: target.set(x, y, depthParallelepiped / 2); break; // Frente
+        case 1: target.set(x, y, -depthParallelepiped / 2); break; // Traseira
+        case 2: target.set(x, heightParallelepiped / 2, z); break; // Cima
+        case 3: target.set(x, -heightParallelepiped / 2, z); break; // Baixo
+        case 4: target.set(widthParallelepiped / 2, y, z); break; // Direita
+        case 5: target.set(-widthParallelepiped / 2, y, z); break; // Esquerda
     }
 }
 
-function addSurface(obj, x, y, z, radius, i) {
+function quadPyramid(u, v, target, face) {
+    const vertices = [
+        // topo
+        [0, 1, 0],
+        [0, -heightQuadPyramid/2, Math.sqrt(baseQuadPyramid) / 2], 
+        [Math.sqrt(baseQuadPyramid) / 2, -heightQuadPyramid/2, 0], 
+        [0, -heightQuadPyramid/2, -Math.sqrt(baseQuadPyramid) / 2], 
+        [-Math.sqrt(baseQuadPyramid) / 2, -heightQuadPyramid/2, 0] 
+    ];
+    const indices = [
+        [1, 2, 3], //base
+        [1, 4, 3], //base
+        [1, 2, 0], 
+        [2, 3, 0],
+        [3, 4, 0],
+        [4, 1, 0]
+    ];
+    const i = Math.floor(u * 2); // Map u to eithe5r 0 or 1
 
+    const vertexIndex = indices[face][i];
+    const nextVertexIndex = indices[face][(i + 1) % 3]; // Wrap around to create triangles
+
+    const vertex = vertices[vertexIndex];
+    const nextVertex = vertices[nextVertexIndex];
+
+    // Linear interpolation between the two vertices
+    const interpolatedX = vertex[0] + (nextVertex[0] - vertex[0]) * v;
+    const interpolatedY = vertex[1] + (nextVertex[1] - vertex[1]) * v;
+    const interpolatedZ = vertex[2] + (nextVertex[2] - vertex[2]) * v;
+
+    target.set(interpolatedX, interpolatedY, interpolatedZ);
+}
+
+function cone(u, v, target) {
+    const radius = radiusCone - u; 
+    const angle = 2 * Math.PI * v;
+
+    const x = radius * Math.cos(angle);
+    const y = u * heightCone; 
+    const z = radius * Math.sin(angle);
+
+    target.set(x, y, z);
+}
+
+function coneCutted(u, v, target) {
+    const radius = radiusConeCutted2 + (radiusConeCutted1 - radiusConeCutted2) * v;
+    const angle = u * 2 * Math.PI;
+
+    const x = radius * Math.cos(angle);
+    const y = (radius * Math.sin(angle));
+    const z = heightConeCutted * (1 - v);
+
+    target.set(x, z, y);
+}
+
+function hexagonalPrism(u, v, target) {
+    const angle = 2 * Math.PI * v;
+
+    // Coordenadas x e z para a base hexagonal
+    const x = radiusHexagonalPrism * Math.cos(angle);
+    const z = radiusHexagonalPrism * Math.sin(angle);
+    const y = heightHexagonalPrism * u;  // Altura varia linearmente com u
+
+    target.set(x, y, z);
+}
+
+function rulledSurface1(u, v, target) {
+
+}
+
+function rulledSurface2(u, v, target) {
+
+}
+
+function addSurface1(obj, x, y, z, radius, i) {
+    // Cilindro
     const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
     const angle = segmentAngle * i; // Calcula o ângulo para a posição i
 
@@ -179,8 +274,8 @@ function addSurface(obj, x, y, z, radius, i) {
     const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
     const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
 
-    geometry = new THREE.CylinderGeometry(1,1,2,32);
-    material = materials[currentMaterialKey];
+    geometry = new PARAMETRIC.ParametricGeometry(cylinder,32,32);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
@@ -193,6 +288,144 @@ function addSurface(obj, x, y, z, radius, i) {
 
 }
 
+function addSurface2(obj, x, y, z, radius, i) {
+    // Paralelepipedo
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    const group = new THREE.Group();
+    
+    for (let i = 0; i < 6; i++) {
+        const faceGeometry = new PARAMETRIC.ParametricGeometry((u, v, target) => {
+            parallelepiped(u, v, target, i);
+        }, 10, 10);
+        const faceMesh = new THREE.Mesh(faceGeometry, material);
+        group.add(faceMesh);
+    }
+    
+    group.position.set(
+        x + radius * Math.cos(angle),
+        y, 
+        z + radius * Math.sin(angle));
+    obj.add(group);
+    group.userData.rotationSpeed = 0.01; 
+}
+
+function addSurface3(obj, x, y, z, radius, i) {
+    // Piramide quadrangular
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    const group = new THREE.Group();
+
+    for (let faceIndex = 0; faceIndex < 6; faceIndex++) {
+        const faceGeometry = new PARAMETRIC.ParametricGeometry((u, v, target) => {
+            quadPyramid(u, v, target, faceIndex);
+        }, 10, 10);
+
+        const faceMesh = new THREE.Mesh(faceGeometry, material);
+        group.add(faceMesh); 
+    }
+
+    group.position.set(
+        x + radius * Math.cos(angle),
+        y, 
+        z + radius * Math.sin(angle));
+    obj.add(group);
+    group.userData.rotationSpeed = 0.01; 
+}
+
+function addSurface4(obj, x, y, z, radius, i) {
+    // Cylinder with different radius surface
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(coneCutted,32,32);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y-1, 
+        z + radius * Math.sin(angle));
+    obj.add(mesh);
+
+    mesh.userData.rotationSpeed = 0.01; 
+}
+
+function addSurface5(obj, x, y, z, radius, i) {
+    // Cone surface
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(cone,32,32);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y-1, 
+        z + radius * Math.sin(angle));
+    obj.add(mesh);
+
+    mesh.userData.rotationSpeed = 0.01;
+}
+
+function addSurface6(obj, x, y, z, radius, i) {
+    // Prisma Hexagonal
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(hexagonalPrism,10,10);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y-1, 
+        z + radius * Math.sin(angle));
+    obj.add(mesh);
+
+    mesh.userData.rotationSpeed = 0.01; 
+}
+
+function addSurface7(obj, x, y, z, radius, i) {
+    // Superficie regrada 1
+}
+
+function addSurface8(obj, x, y, z, radius, i) {
+    // Superficie regrada 2
+    
+}
 
 //E NECESSARIO UM ARRAY COM TODOS OS VERTICES DA FAIXA DE MOBIUS
 // A FAIXA E CONSTITUIDA POR TRIANGULOS
@@ -211,11 +444,13 @@ function createCarrousel(x, y, z){
     const r1InnerRadius = cylinderRadius + 0.1;
     const r2InnerRadius = r1InnerRadius + ringsWidth + 0.1;
     const r3InnerRadius = r2InnerRadius + ringsWidth + 0.1;
+    const rsInnerRadius = [r1InnerRadius, r2InnerRadius, r3InnerRadius];
 
     // Create groups for better manipulation
     r1Group = new THREE.Object3D();
     r2Group = new THREE.Object3D();
     r3Group = new THREE.Object3D();
+    const rsGroup = [r1Group, r2Group, r3Group];
 
     addMobiusStrip(carrousel, 0, 12, 0);
     addCylinder(carrousel, 0, 0, 0, cylinderRadius, cylinderHeight);
@@ -225,12 +460,15 @@ function createCarrousel(x, y, z){
     carrousel.middleRing = addRing(r2Group, 0, cylinderHeight/2, 0, r2InnerRadius); 
     carrousel.outerRing = addRing(r3Group, 0, cylinderHeight/2, 0, r3InnerRadius); 
 
-    // Adds 8 surfaces to each ring
-    for (let i = 0; i < 8; i++) {
-        // tamanho da base das superficies deve ter em conta ringsWidth
-        addSurface(r1Group, 0, 2.5, 0, r1InnerRadius+(ringsWidth/2), i);
-        addSurface(r2Group, 0, 2.5, 0, r2InnerRadius+(ringsWidth/2), i);
-        addSurface(r3Group, 0, 2.5, 0, r3InnerRadius+(ringsWidth/2), i);
+    for (let i = 0; i < 3; i++) {
+        addSurface1(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 0);
+        addSurface2(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 1);
+        addSurface3(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 2);
+        addSurface4(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 3);
+        addSurface5(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 4);
+        addSurface6(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 5);
+        //addSurface7(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 6);
+        //addSurface8(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 7);
     }
 
     // Adds groups to the Carrousel
