@@ -382,8 +382,6 @@ function update(delta){
         } 
     }
 
-    if (keyQtestDown) { r1Group.position.y -= (2 * delta); }// Rotação constante em torno do eixo Y
-
     if (!key2Down) { 
         r2Group.position.y += (2 * delta) * r2Direction;
         if (r2Group.position.y >= upperLimit || r2Group.position.y <= lowerLimit) {
@@ -391,16 +389,12 @@ function update(delta){
         }    
     }
 
-    if (keyWtestDown) { r2Group.position.y -= (2 * delta); }
-
     if (!key3Down) { 
         r3Group.position.y += (2 * delta) * r3Direction; 
         if (r3Group.position.y >= upperLimit || r3Group.position.y <= lowerLimit) {
             r3Direction *= -1;
         }
     }
-
-    if (keyEtestDown) { r3Group.position.y -= (2 * delta); }
 
     if (key4Down) { activeCamera = topCamera; }
 
