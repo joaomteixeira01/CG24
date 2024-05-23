@@ -14,17 +14,34 @@ var geometry, material, mesh;
 
 var camera, topCamera, sideCamera, activeCamera;
 
+var materials = {
+    lambert: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
+    phong: new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100 }),
+    toon: new THREE.MeshToonMaterial({ color: 0x00ff00 }),
+    normal: new THREE.MeshNormalMaterial()
+};
+
+var currentMaterialKey = 'lambert';
+
 // Status of key variables (verify if the key is pressed)
 var keyDDown = false;
 var key1Down = false;
 var key2Down = false;
 var key3Down = false;
-var keyQDown = false;
-var keyWDown = false;
-var keyEDown = false;
+var keyQtestDown = false;
+var keyWtestDown = false;
+var keyEtestDown = false;
 var key4Down = false;
 var key5Down = false;
 var key6Down = false;
+
+var keyDDown = false;
+var keyQDown = false;
+var keyWDown = false;
+var keyEDown = false;
+var keyRDown = false;
+
+var directionalLight = null;
 
 // VSClock
 const clock = new THREE.Clock();
@@ -63,7 +80,7 @@ function addMobiusStrip(obj, x, y, z) {
 
 	}
     geometry = new PARAMETRIC.ParametricGeometry(mobiusFunction, 64, 64);
-    material = new THREE.MeshBasicMaterial({color: '#ADD8E6', wireframe: true});
+    material = materials[currentMaterialKey];
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     obj.add(mesh);
@@ -73,7 +90,7 @@ function addCylinder(obj, x, y, z, radius, height){
     'use strict';
 
     geometry = new THREE.CylinderGeometry(radius, radius, height, 32);
-    material = new THREE.MeshBasicMaterial({color: '#ADD8E6', wireframe: true});
+    material = materials[currentMaterialKey];
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     obj.add(mesh);
@@ -102,7 +119,7 @@ function addRing(scene, x, y, z, innerRadius) {
 
     // Cria a geometria extrudada a partir da forma
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    const material = new THREE.MeshBasicMaterial({ color: '#ADD8E6', wireframe: true });
+    const material = materials[currentMaterialKey];
     const mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.set(x, y, z);
@@ -124,7 +141,7 @@ function addParametricSurfacesToRing(ring, radius) {
     const segmentAngle = 2 * Math.PI / 8; // 45 graus em radianos
     for (let i = 0; i < 8; i++) {
         geometry = new PARAMETRIC.ParametricGeometry(hyperboloid, 10, 10);
-        material = new THREE.MeshBasicMaterial({ color: new THREE.Color(`hsl(${i * 45}, 100%, 50%)`), wireframe: true });
+        material = materials[currentMaterialKey];
         mesh = new THREE.Mesh(geometry, material);
         
         // Posicionamento
@@ -161,7 +178,7 @@ function addSurface(obj, x, y, z, radius, i) {
     const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
 
     geometry = new THREE.CylinderGeometry(1,1,2,32);
-    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    material = materials[currentMaterialKey];
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
@@ -287,11 +304,16 @@ function createAmbientLight() {
 }
 
 function turnOnDirectionalLight(){
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(1, 1, 1); 
-    directionalLight.target.position.set(0, 0, 0); 
+    directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(10, 5, 7.5);
     scene.add(directionalLight);
-    scene.add(directionalLight.target);
+}
+
+function turnOffDirectionalLight() {
+    if (directionalLight) {
+        scene.remove(directionalLight);
+        directionalLight = null; 
+    }
 }
 
 ////////////////////////
@@ -317,22 +339,28 @@ function handleCollisions(){
 ////////////
 /* UPDATE */
 ////////////
+
+function updateMaterials() {
+    scene.traverse(function (object) {
+        if (object.isMesh) {
+            object.material = materials[currentMaterialKey];
+        }
+    });
+}
+
 function update(delta){
     'use strict';
 
     if(keyDDown) {}
     
     if (!key1Down) { 
-        console.log('Starting movement position ->', (r1Group.position.y));
         r1Group.position.y += (2 * delta) * r1Direction;
-        console.log('MOVING!!!\n position ->', (r1Group.position.y));
         if (r1Group.position.y >= upperLimit || r1Group.position.y <= lowerLimit) {
-            console.log('CHANGING DIRECTION!!!');
             r1Direction *= -1; // Inverte a direção se atingir os limites
         } 
     }
 
-    if (keyQDown) { r1Group.position.y -= (2 * delta); }
+    if (keyQtestDown) { r1Group.position.y -= (2 * delta); }// Rotação constante em torno do eixo Y
 
     if (!key2Down) { 
         r2Group.position.y += (2 * delta) * r2Direction;
@@ -341,7 +369,7 @@ function update(delta){
         }    
     }
 
-    if (keyWDown) { r2Group.position.y -= (2 * delta); }
+    if (keyWtestDown) { r2Group.position.y -= (2 * delta); }
 
     if (!key3Down) { 
         r3Group.position.y += (2 * delta) * r3Direction; 
@@ -350,13 +378,24 @@ function update(delta){
         }
     }
 
-    if (keyEDown) { r3Group.position.y -= (2 * delta); }
+    if (keyEtestDown) { r3Group.position.y -= (2 * delta); }
 
     if (key4Down) { activeCamera = topCamera; }
 
     if (key5Down) { activeCamera = camera; }
 
     if (key6Down) { activeCamera = sideCamera; }
+
+    if (keyDDown) { turnOffDirectionalLight(); }
+    else if (directionalLight == null) { turnOnDirectionalLight(); }
+
+    if (keyQDown) { currentMaterialKey = 'lambert'; updateMaterials(); }
+
+    if (keyWDown) { currentMaterialKey = 'phong'; updateMaterials(); }
+
+    if (keyEDown) { currentMaterialKey = 'toon'; updateMaterials(); }
+
+    if (keyRDown) { currentMaterialKey = 'normal'; updateMaterials(); }
 
     scene.traverse(function(object) {
         if (object.userData.rotationSpeed) {
@@ -392,6 +431,7 @@ function init() {
     createCamera();
     activeCamera = camera;
     createAmbientLight();
+    turnOnDirectionalLight();
 
     render();
 
@@ -448,10 +488,25 @@ function onKeyDown(e) {
         case 54: // '6'
             key6Down = true;
             break;
+        case 68: // 'D'
+            keyDDown = !keyDDown;
+            break;
+        case 81: 
+            keyQDown = true;  
+            break;
+        case 87: 
+            keyWDown = true;
+            break;
+        case 69: 
+            keyEDown = true;
+            break;
+        case 82: 
+            keyRDown = true;
+            break;
         
     }
 
-    if (key1Down || key2Down || key3Down || keyQDown || keyWDown || keyEDown) {
+    if (key1Down || key2Down || key3Down || key4Down || key5Down || key6Down || keyQDown || keyWDown || keyEDown || keyRDown) {
         e.preventDefault();
         e.stopPropagation();
     }
@@ -474,6 +529,18 @@ function onKeyUp(e){
             break;
         case 54: // '6'
             key6Down = false;
+            break;
+        case 81: 
+            keyQDown = false;  
+            break;
+        case 87: 
+            keyWDown = false;
+            break;
+        case 69: 
+            keyEDown = false;
+            break;
+        case 82: 
+            keyRDown = false;
             break;
         
 
