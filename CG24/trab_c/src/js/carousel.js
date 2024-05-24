@@ -14,11 +14,14 @@ var geometry, material, mesh;
 
 var camera, topCamera, sideCamera, activeCamera;
 
+var carrousel;
+
 var materials = {
     lambert: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
     phong: new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100 }),
     toon: new THREE.MeshToonMaterial({ color: 0x00ff00 }),
-    normal: new THREE.MeshNormalMaterial()
+    normal: new THREE.MeshNormalMaterial(),
+    basic: new THREE.MeshBasicMaterial({ color: 0x00ff00 })
 };
 
 var currentMaterialKey = 'lambert';
@@ -37,6 +40,10 @@ var keyQDown = false;
 var keyWDown = false;
 var keyEDown = false;
 var keyRDown = false;
+
+var keySDown = false;
+
+var keyTDown = false;
 
 var directionalLight = null;
 
@@ -316,7 +323,22 @@ function addSurface1(obj, x, y, z, radius, i) {
         z + radius * Math.sin(angle));
     mesh.rotateZ(Math.PI / 4); 
     obj.add(mesh);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+
     mesh.name = "cylinder";
+    mesh.userData.spotLight = spotLight;
     // Adiciona velocidade de rotação
     mesh.userData.rotationSpeed = 2; // Velocidade de rotação constante
 
@@ -342,6 +364,21 @@ function addSurface2(obj, x, y, z, radius, i) {
         x + radius * Math.cos(angle),
         y+0.5, 
         z + radius * Math.sin(angle));
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    group.add(spotLight);
+    group.add(targetObject);
+    group.userData.spotLight = spotLight;
+    group.name = "parallelepiped";
     
     group.rotateX(3*Math.PI / 4); 
     mesh.name = "parallelepiped";
@@ -372,6 +409,21 @@ function addSurface3(obj, x, y, z, radius, i) {
         z + radius * Math.sin(angle));
     group.rotateZ(Math.PI/8);
     obj.add(group);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    group.add(spotLight);
+    group.add(targetObject);
+    group.userData.spotLight = spotLight;
+
     group.name = "quadPyramid";
     group.userData.rotationSpeed = 0.01; 
 }
@@ -391,6 +443,21 @@ function addSurface4(obj, x, y, z, radius, i) {
 
     mesh.rotateX(Math.PI / 6);
     obj.add(mesh); 
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+    mesh.userData.spotLight = spotLight;
+
     mesh.name = "coneCutted";
     mesh.userData.rotationSpeed = 0.01; 
 }
@@ -409,6 +476,21 @@ function addSurface5(obj, x, y, z, radius, i) {
         z + radius * Math.sin(angle));
     mesh.rotateZ(7*Math.PI / 6);
     obj.add(mesh);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+    mesh.userData.spotLight = spotLight;
+
     mesh.name = "cone";
     mesh.userData.rotationSpeed = 0.01;
 }
@@ -427,6 +509,21 @@ function addSurface6(obj, x, y, z, radius, i) {
         z + radius * Math.sin(angle));
     mesh.rotateX(Math.PI / 3);
     obj.add(mesh);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+    mesh.userData.spotLight = spotLight;
+
     mesh.name = "hexagonalPrism";
     mesh.userData.rotationSpeed = 0.01; 
 }
@@ -445,6 +542,21 @@ function addSurface7(obj, x, y, z, radius, i) {
         z + radius * Math.sin(angle));
     mesh.rotateZ(Math.PI / 2);
     obj.add(mesh);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+    mesh.userData.spotLight = spotLight;
+
     mesh.name = "rulledSurface1";
     mesh.userData.rotationSpeed = 0.01;
 }
@@ -463,6 +575,20 @@ function addSurface8(obj, x, y, z, radius, i) {
         z + radius * Math.sin(angle));
     mesh.rotateX(Math.PI / 3);
     obj.add(mesh);
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+    mesh.userData.spotLight = spotLight;
+
     mesh.name = "rulledSurface2";
     mesh.userData.rotationSpeed = 0.01;
 }
@@ -492,7 +618,7 @@ function addPointLight(obj, x, y, z, intensity, color) {
 function createCarrousel(x, y, z){
     'use strict';
 
-    var carrousel = new THREE.Object3D();
+    carrousel = new THREE.Object3D();
 
     // Create groups for better manipulation
     r1Group = new THREE.Object3D();
@@ -646,6 +772,12 @@ function turnOffDirectionalLight() {
     }
 }
 
+function toggleSpotlight(mesh, turnOn) {
+    if (mesh && mesh.userData && mesh.userData.spotLight) {
+        mesh.userData.spotLight.intensity = turnOn ? 1 : 0;
+    }
+}
+
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
@@ -683,7 +815,6 @@ function update(delta){
     for (let i = 0; i < rsGroup.length; i++) {
         for (let j = 1; j < 9; j++) {
             var s1 = rsGroup[i].children[j];
-            console.log(rsGroup[i]);
             s1.rotateY(2 * delta);
         }
     }
@@ -727,12 +858,37 @@ function update(delta){
 
     if (keyRDown) { currentMaterialKey = 'normal'; updateMaterials(); }
 
+    if (keyTDown) { currentMaterialKey = 'basic'; updateMaterials(); }
+
+    if (keySDown) { 
+        toggleSpotlight(scene.getObjectByName("cylinder"), false);
+        toggleSpotlight(scene.getObjectByName("parallelepiped"), false);
+        toggleSpotlight(scene.getObjectByName("quadPyramid"), false);
+        toggleSpotlight(scene.getObjectByName("coneCutted"), false);
+        toggleSpotlight(scene.getObjectByName("cone"), false);
+        toggleSpotlight(scene.getObjectByName("hexagonalPrism"), false);
+        toggleSpotlight(scene.getObjectByName("rulledSurface1"), false);
+        toggleSpotlight(scene.getObjectByName("rulledSurface2"), false);
+    }
+    else {
+        toggleSpotlight(scene.getObjectByName("cylinder"), true);
+        toggleSpotlight(scene.getObjectByName("parallelepiped"), true);
+        toggleSpotlight(scene.getObjectByName("quadPyramid"), true);
+        toggleSpotlight(scene.getObjectByName("coneCutted"), true);
+        toggleSpotlight(scene.getObjectByName("cone"), true);
+        toggleSpotlight(scene.getObjectByName("hexagonalPrism"), true);
+        toggleSpotlight(scene.getObjectByName("rulledSurface1"), true);
+        toggleSpotlight(scene.getObjectByName("rulledSurface2"), true);
+    }
+
     /*scene.traverse(function(object) {
         if (object.userData.rotationSpeed) {
             // Rotação constante em torno do eixo Y
             object.rotateY(object.userData.rotationSpeed * delta);
         }
     });*/
+
+    carrousel.rotateY(0.5 * delta);
 }
 
 /////////////
@@ -831,6 +987,12 @@ function onKeyDown(e) {
         case 82: 
             keyRDown = true;
             break;
+        case 83: 
+            keySDown = !keySDown;
+            break;
+        case 84:
+            keyTDown = true;
+            break;
         
     }
 
@@ -869,6 +1031,9 @@ function onKeyUp(e){
             break;
         case 82: 
             keyRDown = false;
+            break;
+        case 84:
+            keyTDown = false;
             break;
         
 
