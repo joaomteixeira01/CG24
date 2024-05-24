@@ -2,3 +2,9 @@
     "editor.suggest.showStatusBar": true,
     "problems.showCurrentInStatus": false,
     "workbench.activityBar.location": "default",
+    "workbench.activityBar.iconClickBehavior": "toggle",
+    "workbench.view.alwaysShowHeaderActions": false,
+    "workbench.sideBar.location": "left",
+    "cmake.options.statusBarVisibility": "visible",
+    "accessibility.hideAccessibleView": false
+}
