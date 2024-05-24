@@ -28,9 +28,6 @@ var keyDDown = false;
 var key1Down = false;
 var key2Down = false;
 var key3Down = false;
-var keyQtestDown = false;
-var keyWtestDown = false;
-var keyEtestDown = false;
 var key4Down = false;
 var key5Down = false;
 var key6Down = false;
@@ -48,9 +45,19 @@ const clock = new THREE.Clock();
 
 var r1Group, r2Group, r3Group;
 
+// ---- DIMENTIONS ----
+const cylinderRadius = 2;
+const cylinderHeight = 15;
+const ringsWidth = 2;
+const ringsHeight = 3
+const r1InnerRadius = cylinderRadius + 0.1;
+const r2InnerRadius = r1InnerRadius + ringsWidth + 0.1;
+const r3InnerRadius = r2InnerRadius + ringsWidth + 0.1;
+const rsInnerRadius = [r1InnerRadius, r2InnerRadius, r3InnerRadius];
+
 // limites for the rings
-var upperLimit = 7.5; // altura do mobiusStrip - altura das pecas
-var lowerLimit = 0;
+var upperLimit = (cylinderHeight/2) - (ringsHeight/2); // altura do mobiusStrip - altura das pecas
+var lowerLimit = -(cylinderHeight/2) + (ringsHeight/2);
 
 //Surface 1 Dimensions - Cylinder
 var radiusCylinder = 1;
@@ -437,15 +444,6 @@ function createCarrousel(x, y, z){
 
     var carrousel = new THREE.Object3D();
 
-    // ---- DIMENTIONS ----
-    const cylinderRadius = 2;
-    const cylinderHeight = 3;
-    const ringsWidth = 2;
-    const r1InnerRadius = cylinderRadius + 0.1;
-    const r2InnerRadius = r1InnerRadius + ringsWidth + 0.1;
-    const r3InnerRadius = r2InnerRadius + ringsWidth + 0.1;
-    const rsInnerRadius = [r1InnerRadius, r2InnerRadius, r3InnerRadius];
-
     // Create groups for better manipulation
     r1Group = new THREE.Object3D();
     r2Group = new THREE.Object3D();
@@ -456,9 +454,9 @@ function createCarrousel(x, y, z){
     addCylinder(carrousel, 0, 0, 0, cylinderRadius, cylinderHeight);
 
     // Adds rings to each group
-    carrousel.innerRing = addRing(r1Group, 0, cylinderHeight/2, 0, r1InnerRadius); 
-    carrousel.middleRing = addRing(r2Group, 0, cylinderHeight/2, 0, r2InnerRadius); 
-    carrousel.outerRing = addRing(r3Group, 0, cylinderHeight/2, 0, r3InnerRadius); 
+    carrousel.innerRing = addRing(r1Group, 0, ringsHeight/2, 0, r1InnerRadius); 
+    carrousel.middleRing = addRing(r2Group, 0, ringsHeight/2, 0, r2InnerRadius); 
+    carrousel.outerRing = addRing(r3Group, 0, ringsHeight/2, 0, r3InnerRadius); 
 
     for (let i = 0; i < 3; i++) {
         addSurface1(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 0);
