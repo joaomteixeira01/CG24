@@ -14,11 +14,14 @@ var geometry, material, mesh;
 
 var camera, topCamera, sideCamera, activeCamera;
 
+var carrousel;
+
 var materials = {
     lambert: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
     phong: new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100 }),
     toon: new THREE.MeshToonMaterial({ color: 0x00ff00 }),
-    normal: new THREE.MeshNormalMaterial()
+    normal: new THREE.MeshNormalMaterial(),
+    basic: new THREE.MeshBasicMaterial({ color: 0x00ff00 })
 };
 
 var currentMaterialKey = 'lambert';
@@ -37,6 +40,9 @@ var keyQDown = false;
 var keyWDown = false;
 var keyEDown = false;
 var keyRDown = false;
+var keySDown = false;
+
+var keyTDown = false;
 
 var directionalLight = null;
 
@@ -311,13 +317,26 @@ function addSurface1(obj, x, y, z, radius, i) {
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
-        y, 
+        y + 1, 
         z + radius * Math.sin(angle));
     obj.add(mesh);
 
-    // Adiciona velocidade de rotação
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+     
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+ 
     mesh.userData.rotationSpeed = 0.01; // Velocidade de rotação constante
-
+    mesh.name = "Surface1";
+    mesh.userData.spotLight = spotLight;
 }
 
 function addSurface2(obj, x, y, z, radius, i) {
@@ -333,6 +352,7 @@ function addSurface2(obj, x, y, z, radius, i) {
 
     material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
     const group = new THREE.Group();
+    group.name = "Surface2";
     
     for (let i = 0; i < 6; i++) {
         const faceGeometry = new PARAMETRIC.ParametricGeometry((u, v, target) => {
@@ -344,10 +364,26 @@ function addSurface2(obj, x, y, z, radius, i) {
     
     group.position.set(
         x + radius * Math.cos(angle),
-        y, 
+        y + 1, 
         z + radius * Math.sin(angle));
     obj.add(group);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+     
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    group.add(spotLight);
+    group.add(targetObject);
+
     group.userData.rotationSpeed = 0.01; 
+    group.name = "Surface2";
+    group.userData.spotLight = spotLight;
 }
 
 function addSurface3(obj, x, y, z, radius, i) {
@@ -375,10 +411,27 @@ function addSurface3(obj, x, y, z, radius, i) {
 
     group.position.set(
         x + radius * Math.cos(angle),
-        y, 
+        y + 1, 
         z + radius * Math.sin(angle));
     obj.add(group);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+     
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    group.add(spotLight);
+    group.add(targetObject);
+
+
     group.userData.rotationSpeed = 0.01; 
+    group.name = "Surface3";
+    group.userData.spotLight = spotLight;
 }
 
 function addSurface4(obj, x, y, z, radius, i) {
@@ -397,11 +450,26 @@ function addSurface4(obj, x, y, z, radius, i) {
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
-        y-1, 
+        y, 
         z + radius * Math.sin(angle));
     obj.add(mesh);
 
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+     
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+
     mesh.userData.rotationSpeed = 0.01; 
+    mesh.name = "Surface4";
+    mesh.userData.spotLight = spotLight;
 }
 
 function addSurface5(obj, x, y, z, radius, i) {
@@ -420,11 +488,26 @@ function addSurface5(obj, x, y, z, radius, i) {
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
-        y-1, 
+        y, 
         z + radius * Math.sin(angle));
     obj.add(mesh);
 
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+     
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+
     mesh.userData.rotationSpeed = 0.01;
+    mesh.name = "Surface5";
+    mesh.userData.spotLight = spotLight;
 }
 
 function addSurface6(obj, x, y, z, radius, i) {
@@ -443,11 +526,26 @@ function addSurface6(obj, x, y, z, radius, i) {
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
-        y-1, 
+        y, 
         z + radius * Math.sin(angle));
     obj.add(mesh);
 
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+     
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+
     mesh.userData.rotationSpeed = 0.01; 
+    mesh.name = "Surface6";
+    mesh.userData.spotLight = spotLight;
 }
 
 function addSurface7(obj, x, y, z, radius, i) {
@@ -466,11 +564,26 @@ function addSurface7(obj, x, y, z, radius, i) {
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
-        y, 
+        y + 1, 
         z + radius * Math.sin(angle));
-
     obj.add(mesh);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+     
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+
     mesh.userData.rotationSpeed = 0.01;
+    mesh.name = "Surface7";
+    mesh.userData.spotLight = spotLight;
 }
 
 function addSurface8(obj, x, y, z, radius, i) {
@@ -489,11 +602,27 @@ function addSurface8(obj, x, y, z, radius, i) {
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
-        y, 
+        y + 1, 
         z + radius * Math.sin(angle));
 
     obj.add(mesh);
+
+    const spotLight = new THREE.SpotLight(0xffffff);
+    spotLight.position.set(0, -3, 0);
+    spotLight.angle = Math.PI / 2;
+    spotLight.penumbra = 0.5;
+    spotLight.decay = 1;
+    spotLight.distance = 100;
+     
+    const targetObject = new THREE.Object3D();
+    targetObject.position.set(0, 10, 0); 
+    spotLight.target = targetObject;
+    mesh.add(spotLight);
+    mesh.add(targetObject);
+
     mesh.userData.rotationSpeed = 0.01;
+    mesh.name = "Surface8";
+    mesh.userData.spotLight = spotLight;
 }
 
 //E NECESSARIO UM ARRAY COM TODOS OS VERTICES DA FAIXA DE MOBIUS
@@ -504,7 +633,7 @@ function addSurface8(obj, x, y, z, radius, i) {
 function createCarrousel(x, y, z){
     'use strict';
 
-    var carrousel = new THREE.Object3D();
+    carrousel = new THREE.Object3D();
 
     // Create groups for better manipulation
     r1Group = new THREE.Object3D();
@@ -636,6 +765,12 @@ function turnOffDirectionalLight() {
     }
 }
 
+function toggleSpotlight(mesh, turnOn) {
+    if (mesh.userData.spotLight) {
+        mesh.userData.spotLight.intensity = turnOn ? 1 : 0;
+    }
+}
+
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
@@ -711,6 +846,29 @@ function update(delta){
 
     if (keyRDown) { currentMaterialKey = 'normal'; updateMaterials(); }
 
+    if (keyTDown) { currentMaterialKey = 'basic'; updateMaterials(); }
+
+    if (keySDown) { 
+        toggleSpotlight(scene.getObjectByName("Surface1"), false); 
+        toggleSpotlight(scene.getObjectByName("Surface2"), false);
+        toggleSpotlight(scene.getObjectByName("Surface3"), false);
+        toggleSpotlight(scene.getObjectByName("Surface4"), false);
+        toggleSpotlight(scene.getObjectByName("Surface5"), false);
+        toggleSpotlight(scene.getObjectByName("Surface6"), false);
+        toggleSpotlight(scene.getObjectByName("Surface7"), false);
+        toggleSpotlight(scene.getObjectByName("Surface8"), false);
+    }
+    else {
+        toggleSpotlight(scene.getObjectByName("Surface1"), true);
+        toggleSpotlight(scene.getObjectByName("Surface2"), true);
+        toggleSpotlight(scene.getObjectByName("Surface3"), true);
+        toggleSpotlight(scene.getObjectByName("Surface4"), true);
+        toggleSpotlight(scene.getObjectByName("Surface5"), true);
+        toggleSpotlight(scene.getObjectByName("Surface6"), true);
+        toggleSpotlight(scene.getObjectByName("Surface7"), true);
+        toggleSpotlight(scene.getObjectByName("Surface8"), true);
+    }
+
     scene.traverse(function(object) {
         if (object.userData.rotationSpeed) {
             // Rotação constante em torno do eixo Y
@@ -718,7 +876,7 @@ function update(delta){
         }
     });
 
-
+    carrousel.rotateY(0.05 * delta);
 }
 
 /////////////
@@ -817,6 +975,12 @@ function onKeyDown(e) {
         case 82: 
             keyRDown = true;
             break;
+        case 83:
+            keySDown = !keySDown;
+            break;
+        case 84:
+            keyTDown = true;
+            break;
         
     }
 
@@ -855,6 +1019,9 @@ function onKeyUp(e){
             break;
         case 82: 
             keyRDown = false;
+            break;
+        case 84:
+            keyTDown = false;
             break;
         
 
