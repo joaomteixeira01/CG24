@@ -53,7 +53,7 @@ const clock = new THREE.Clock();
 var r1Group, r2Group, r3Group;
 var rsGroup = [r1Group, r2Group, r3Group];
 
-// ---- DIMENTIONS ----
+/* ------ DIMENTIONS ------ */
 const cylinderRadius = 2;
 const cylinderHeight = 15;
 const ringsWidth = 2;
@@ -63,50 +63,52 @@ const r2InnerRadius = r1InnerRadius + ringsWidth + 0.1;
 const r3InnerRadius = r2InnerRadius + ringsWidth + 0.1;
 const rsInnerRadius = [r1InnerRadius, r2InnerRadius, r3InnerRadius];
 
-// limites for the rings
+/* ------ limites for the rings ------ */
 var upperLimit = (cylinderHeight/2) - (ringsHeight/2); // altura do mobiusStrip - altura das pecas
 var lowerLimit = -(cylinderHeight/2) + (ringsHeight/2);
 
-//Surface 1 Dimensions - Cylinder
+/* ------ SURFACES DIMENSIONS ------ */
+//Surface 1 - Cylinder
 var radiusCylinder = 1;
 var heightCylinder = 2;
 
-//Surface 2 Dimensions - Parallelepiped
+//Surface 2 - Parallelepiped
 var widthParallelepiped = Math.sqrt(2);
 var heightParallelepiped = 2;
 var depthParallelepiped = Math.sqrt(2);
 
-//Surface 3 Dimensions - Quadrangular Pyramid
+//Surface 3 - Quadrangular Pyramid
 var baseQuadPyramid = 2;
 var heightQuadPyramid = 2;
 
-//Surface 4 Dimensions - Cone cutted
+//Surface 4 - Cone cutted
 var radiusConeCutted1 = 1;
 var radiusConeCutted2 = 0.5;
 var heightConeCutted = 2;
 
-// Surface 5 Dimensions - Cone
+// Surface 5 - Cone
 var radiusCone = 1;
 var heightCone = 2;
 
-// Surface 6 Dimensions - Hexagonal Prism
+// Surface 6 - Hexagonal Prism
 var radiusHexagonalPrism = 1;
 var heightHexagonalPrism = 2;
 
-// Surface 7 Dimensions - Rulled Surface 1
+// Surface 7 - Rulled Surface 1
 var rulledSurface1Dim = 0.07;
 
-// Surface 8 Dimensions - Rulled Surface 2
+// Surface 8 - Rulled Surface 2
 var rulledSurface2Dim = 0.12;
 
-var r1Direction = 1; // 1 para subir, -1 para descer
-var r2Direction = 1; // Inicialmente subindo
-var r3Direction = 1;
-
-/* --- VARIABLES FOR THE SURFACES --- */
+/* ------ VARIABLES FOR THE SURFACES ------ */
 const segmentAngle = 2 * Math.PI / 8;   // Cada segmento é de 45 graus
 var angle;
 var color;
+
+/* ------ DIRECTIONS ------ */
+var r1Direction = 1; // 1 to go up, -1 to go down 
+var r2Direction = 1; // it starts going up
+var r3Direction = 1;
 
 const imagePath = '../assets/image.jpg';
 
