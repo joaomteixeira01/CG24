@@ -45,6 +45,8 @@ var keySDown = false;
 
 var keyTDown = false;
 
+var keyPDown = false;
+
 var directionalLight = null;
 
 // VSClock
@@ -609,7 +611,24 @@ function addPointLight(obj, x, y, z, intensity, color) {
     'use strict';
     var pointLight = new THREE.PointLight(color, intensity);
     pointLight.position.set(x, y, z);
+    pointLight.userData.originalIntensity = intensity;
     obj.add(pointLight);
+}
+
+function turnOffAllPointLights(scene) {
+    scene.traverse(function(node) {
+        if (node instanceof THREE.PointLight) {
+            node.intensity = 0;
+        }
+    });
+}
+
+function turnOnAllPointLights(scene) {
+    scene.traverse(function(node) {
+        if (node instanceof THREE.PointLight) {
+            node.intensity = node.userData.originalIntensity; // Restore the original intensity
+        }
+    });
 }
 
 //E NECESSARIO UM ARRAY COM TODOS OS VERTICES DA FAIXA DE MOBIUS
@@ -852,6 +871,9 @@ function update(delta){
     if (keyDDown) { turnOffDirectionalLight(); }
     else if (directionalLight == null) { turnOnDirectionalLight(); }
 
+    if (keyPDown) { turnOffAllPointLights(scene); }
+    else { turnOnAllPointLights(scene); }
+
     if (keyQDown) { currentMaterialKey = 'lambert'; updateMaterials(); }
 
     if (keyWDown) { currentMaterialKey = 'phong'; updateMaterials(); }
@@ -995,7 +1017,9 @@ function onKeyDown(e) {
         case 84:
             keyTDown = true;
             break;
-        
+        case 80: 
+            keyPDown = !keyPDown;
+            break;
     }
 
     if (key1Down || key2Down || key3Down || key4Down || key5Down || key6Down || keyQDown || keyWDown || keyEDown || keyRDown) {
