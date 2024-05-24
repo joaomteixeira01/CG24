@@ -544,17 +544,28 @@ function addSkydome(x, y, z) {
     'use strict';
 
     // Sphere dimentions
-    const radius = 20;
+    const radius = 25;
     const widthSegments = 60;
     const heighhtSegments = 20;
+
+    // Apenas metade superior da esfera
+    const phiStart = 0;          // Início do hemisfério (0 graus)
+    const phiLength = Math.PI / 2;  // Comprimento do hemisfério (90 graus, metade da esfera)
 
     let texture = new THREE.TextureLoader().load(imagePath);
 
     material = new THREE.MeshBasicMaterial({map: texture, side: THREE.BackSide});
-    geometry = new THREE.SphereGeometry(radius, widthSegments, heighhtSegments);
+    geometry = new THREE.SphereGeometry(radius, widthSegments, heighhtSegments, 0, Math.PI * 2, phiStart, phiLength);
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     scene.add(mesh);
+
+    // Disco para fechar a meia esfera
+    const circleGeometry = new THREE.CircleGeometry(radius, widthSegments);
+    const circleMesh = new THREE.Mesh(circleGeometry, material);
+    circleMesh.rotation.x = Math.PI / 2;  
+    circleMesh.position.set(x, y, z);  
+    scene.add(circleMesh);
 }
 
 function createScene(){
@@ -565,7 +576,7 @@ function createScene(){
 
     createCarrousel(0, 0, 0);
 
-    addSkydome(0,0,0);
+    addSkydome(0, -7.5, 0);
 }
 
 //////////////////////
@@ -591,7 +602,7 @@ function createCamera() {
 
     // Side Camera
     sideCamera = new THREE.PerspectiveCamera(7, window.innerWidth / window.innerHeight, 1, 1000);
-    sideCamera.position.set(200, 5, 0);
+    sideCamera.position.set(500, 5, 0);
     sideCamera.lookAt(new THREE.Vector3(0, 0, 0));
 } 
 /*
