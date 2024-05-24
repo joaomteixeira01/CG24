@@ -1,10 +1,6 @@
 import * as THREE from 'three';
 import * as PARAMETRIC from 'parametric';
-import * as VRButton from 'vrbutton';
-/*import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { VRButton } from 'three/addons/webxr/VRButton.js';
-import * as Stats from 'three/addons/libs/stats.module.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';*/
+import { VRButton } from 'vrbutton';
 
 //////////////////////
 /* GLOBAL VARIABLES */
@@ -109,8 +105,8 @@ var angle;
 var color;
 
 /* ------ DIRECTIONS ------ */
-var r1Direction = 1; // 1 to go up, -1 to go down 
-var r2Direction = 1; // it starts going up
+var r1Direction = 1; 
+var r2Direction = 1; 
 var r3Direction = 1;
 
 const imagePath = '../assets/image.jpg';
@@ -160,14 +156,14 @@ function addCylinder(obj, x, y, z, radius, height){
 function addRing(scene, x, y, z, innerRadius) {
     'use strict';
 
-    const outerRadius = innerRadius + 2;    // 2 is the value of the rings width
-    const thickness = 3;                    // Must be equal to the cylinder hight
+    const outerRadius = innerRadius + 2;    
+    const thickness = 3;                   
 
     // Creates a circle
     const shape = new THREE.Shape();
-    shape.absarc(0, 0, outerRadius, 0, Math.PI * 2, false);  // External cicrlce
+    shape.absarc(0, 0, outerRadius, 0, Math.PI * 2, false);  
     const hole = new THREE.Path();
-    hole.absarc(0, 0, innerRadius, 0, Math.PI * 2, true);    // Internal circle with a hole
+    hole.absarc(0, 0, innerRadius, 0, Math.PI * 2, true);   
     shape.holes.push(hole);
 
     // Define as opções de extrusão
@@ -185,16 +181,6 @@ function addRing(scene, x, y, z, innerRadius) {
     mesh.position.set(x, y, z);
     mesh.rotation.x = Math.PI/2;
     scene.add(mesh);
-}
-
-
-function hyperboloid(u, v, target) {
-    u *= 2 * Math.PI;
-    v = v * 2 - 1; // Remapeia v de [0,1] para [-1,1]
-    const x = Math.sinh(v) * Math.cos(u);
-    const y = Math.sinh(v) * Math.sin(u);
-    const z = Math.cosh(v);
-    target.set(x, y, z);
 }
 
 function cylinder(u, v, target) {
@@ -231,17 +217,17 @@ function quadPyramid(u, v, target, face) {
         [-Math.sqrt(baseQuadPyramid) / 2, -heightQuadPyramid/2, 0] 
     ];
     const indices = [
-        [1, 2, 3], //base
-        [1, 4, 3], //base
+        [1, 2, 3], 
+        [1, 4, 3], 
         [1, 2, 0], 
         [2, 3, 0],
         [3, 4, 0],
         [4, 1, 0]
     ];
-    const i = Math.floor(u * 2); // Map u to eithe5r 0 or 1
+    const i = Math.floor(u * 2); 
 
     const vertexIndex = indices[face][i];
-    const nextVertexIndex = indices[face][(i + 1) % 3]; // Wrap around to create triangles
+    const nextVertexIndex = indices[face][(i + 1) % 3]; 
 
     const vertex = vertices[vertexIndex];
     const nextVertex = vertices[nextVertexIndex];
@@ -627,15 +613,10 @@ function turnOffAllPointLights(scene) {
 function turnOnAllPointLights(scene) {
     scene.traverse(function(node) {
         if (node instanceof THREE.PointLight) {
-            node.intensity = node.userData.originalIntensity; // Restore the original intensity
+            node.intensity = node.userData.originalIntensity; 
         }
     });
 }
-
-//E NECESSARIO UM ARRAY COM TODOS OS VERTICES DA FAIXA DE MOBIUS
-// A FAIXA E CONSTITUIDA POR TRIANGULOS
-// OS VERTICES QUE TEM A FAIXA SAO OS VERTICES DO TRIANGULO
-// MAYBE USAR UM BUFFER GEOMETRY PARA ISTO
 
 function createCarrousel(x, y, z){
     'use strict';
@@ -659,7 +640,7 @@ function createCarrousel(x, y, z){
         const vec = new THREE.Vector3();
         mobiusFunction(u, t, vec); 
 
-        addPointLight(carrousel, vec.x, vec.y + 12, vec.z, 1, 0xffffff); // +12 because thats the height of the mobiusStrip
+        addPointLight(carrousel, vec.x, vec.y + 12, vec.z, 1, 0xffffff); 
     }
 
     // Adds rings to each group
@@ -757,23 +738,6 @@ function createCamera() {
     sideCamera.position.set(500, 5, 0);
     sideCamera.lookAt(new THREE.Vector3(0, 0, 0));
 } 
-/*
-function createCamera(scene) {
-    'use strict';
-
-    // Calcula a proporção de aspecto da janela
-    const aspectRatio = window.innerWidth / window.innerHeight;
-    const d = 50; // Define o tamanho da visão da câmera
-
-    // Cria a câmera ortográfica
-    const camera = new THREE.OrthographicCamera(-d * aspectRatio, d * aspectRatio, d, -d, 1, 1000);
-    camera.position.set(0, 50, 0); // Posiciona a câmera acima do centro da cena
-    camera.lookAt(scene.position); // Direciona a câmera para olhar para o centro da cena
-
-    return camera;
-} */
-
-
 
 /////////////////////
 /* CREATE LIGHT(S) */
@@ -812,26 +776,6 @@ function turnOnAllSpotLights(scene) {
             node.intensity = 1; // Restore the original intensity
         }
     });
-}
-
-////////////////////////
-/* CREATE OBJECT3D(S) */
-////////////////////////
-
-//////////////////////
-/* CHECK COLLISIONS */
-//////////////////////
-function checkCollisions(){
-    'use strict';
-
-}
-
-///////////////////////
-/* HANDLE COLLISIONS */
-///////////////////////
-function handleCollisions(){
-    'use strict';
-
 }
 
 ////////////
@@ -906,13 +850,6 @@ function update(delta){
         turnOnAllSpotLights(scene);
     }
 
-    /*scene.traverse(function(object) {
-        if (object.userData.rotationSpeed) {
-            // Rotação constante em torno do eixo Y
-            object.rotateY(object.userData.rotationSpeed * delta);
-        }
-    });*/
-
     carrousel.rotateY(0.5 * delta);
 }
 
@@ -937,8 +874,7 @@ function init() {
     document.body.appendChild(renderer.domElement);
 
 
-    const vrButton = VRButton.createButton(renderer);
-    document.body.appendChild(vrButton);
+    document.body.appendChild( VRButton.createButton( renderer ) );
 
    
     renderer.xr.enabled = true;
@@ -965,7 +901,7 @@ function animate() {
 
     const delta = clock.getDelta();
 
-    //requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
 
     renderer.setAnimationLoop( function () {
 
