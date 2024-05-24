@@ -14,14 +14,11 @@ var geometry, material, mesh;
 
 var camera, topCamera, sideCamera, activeCamera;
 
-var carrousel;
-
 var materials = {
     lambert: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
     phong: new THREE.MeshPhongMaterial({ color: 0x00ff00, shininess: 100 }),
     toon: new THREE.MeshToonMaterial({ color: 0x00ff00 }),
-    normal: new THREE.MeshNormalMaterial(),
-    basic: new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+    normal: new THREE.MeshNormalMaterial()
 };
 
 var currentMaterialKey = 'lambert';
@@ -40,9 +37,6 @@ var keyQDown = false;
 var keyWDown = false;
 var keyEDown = false;
 var keyRDown = false;
-var keySDown = false;
-
-var keyTDown = false;
 
 var directionalLight = null;
 
@@ -50,6 +44,7 @@ var directionalLight = null;
 const clock = new THREE.Clock();
 
 var r1Group, r2Group, r3Group;
+var rsGroup = [r1Group, r2Group, r3Group];
 
 // ---- DIMENTIONS ----
 const cylinderRadius = 2;
@@ -101,12 +96,6 @@ var r1Direction = 1; // 1 para subir, -1 para descer
 var r2Direction = 1; // Inicialmente subindo
 var r3Direction = 1;
 
-/* --- VARIABLES FOR THE SURFACES --- */
-const segmentAngle = 2 * Math.PI / 8;   // Cada segmento é de 45 graus
-var angle;
-var color;
-
-
 const imagePath = '../assets/image.jpg';
 
 /////////////////////
@@ -114,29 +103,29 @@ const imagePath = '../assets/image.jpg';
 /////////////////////
 function addMobiusStrip(obj, x, y, z) {
     'use strict';
+
+    const mobiusFunction = function ( u, t, target ) {
+
+		u *= Math.PI;
+		t *= 2 * Math.PI;
+
+		u = u * 2;
+		const phi = u / 2;
+		const major = 2.25, a = 0.125, b = 0.65;
+
+		let x = a * Math.cos( t ) * Math.cos( phi ) - b * Math.sin( t ) * Math.sin( phi );
+		const y = a * Math.cos( t ) * Math.sin( phi ) + b * Math.sin( t ) * Math.cos( phi );
+		const z = ( major + x ) * Math.sin( u );
+		x = ( major + x ) * Math.cos( u );
+
+		target.set( x, y, z );
+
+	}
     geometry = new PARAMETRIC.ParametricGeometry(mobiusFunction, 64, 64);
     material = materials[currentMaterialKey];
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     obj.add(mesh);
-}
-
-const mobiusFunction = function ( u, t, target ) {
-
-    u *= Math.PI;
-    t *= 2 * Math.PI;
-
-    u = u * 2;
-    const phi = u / 2;
-    const major = 2.25, a = 0.125, b = 0.65;
-
-    let x = a * Math.cos( t ) * Math.cos( phi ) - b * Math.sin( t ) * Math.sin( phi );
-    const y = a * Math.cos( t ) * Math.sin( phi ) + b * Math.sin( t ) * Math.cos( phi );
-    const z = ( major + x ) * Math.sin( u );
-    x = ( major + x ) * Math.cos( u );
-
-    target.set( x, y, z );
-
 }
 
 function addCylinder(obj, x, y, z, radius, height){
@@ -309,48 +298,43 @@ function rulledSurface2(u, v, target) {
 
 function addSurface1(obj, x, y, z, radius, i) {
     // Cilindro
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
 
-    angle = segmentAngle * i;         // Calcula o ângulo para a posição i
-    
-    color = addColor(i);
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
 
     geometry = new PARAMETRIC.ParametricGeometry(cylinder,32,32);
     material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(
         x + radius * Math.cos(angle),
-        y + 1, 
+        y+0.5, 
         z + radius * Math.sin(angle));
+    mesh.rotateZ(Math.PI / 4); 
     obj.add(mesh);
+    mesh.name = "cylinder";
+    // Adiciona velocidade de rotação
+    mesh.userData.rotationSpeed = 2; // Velocidade de rotação constante
 
-    const spotLight = new THREE.SpotLight(0xffffff);
-    spotLight.position.set(0, -3, 0);
-    spotLight.angle = Math.PI / 2;
-    spotLight.penumbra = 0.5;
-    spotLight.decay = 1;
-    spotLight.distance = 100;
-     
-    const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, 10, 0); 
-    spotLight.target = targetObject;
-    mesh.add(spotLight);
-    mesh.add(targetObject);
- 
-    mesh.userData.rotationSpeed = 0.01; // Velocidade de rotação constante
-    mesh.name = "Surface1";
-    mesh.userData.spotLight = spotLight;
 }
 
 function addSurface2(obj, x, y, z, radius, i) {
     // Paralelepipedo
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
 
-    angle = segmentAngle * i;         // Calcula o ângulo para a posição i
-    
-    color = addColor(i);
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
 
     material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
     const group = new THREE.Group();
-    group.name = "Surface2";
     
     for (let i = 0; i < 6; i++) {
         const faceGeometry = new PARAMETRIC.ParametricGeometry((u, v, target) => {
@@ -359,43 +343,36 @@ function addSurface2(obj, x, y, z, radius, i) {
         const faceMesh = new THREE.Mesh(faceGeometry, material);
         group.add(faceMesh);
     }
-    
+
     group.position.set(
         x + radius * Math.cos(angle),
-        y + 1, 
+        y+0.5, 
         z + radius * Math.sin(angle));
+    
+    group.rotateX(3*Math.PI / 4); 
+    mesh.name = "parallelepiped";
     obj.add(group);
-
-    const spotLight = new THREE.SpotLight(0xffffff);
-    spotLight.position.set(0, -3, 0);
-    spotLight.angle = Math.PI / 2;
-    spotLight.penumbra = 0.5;
-    spotLight.decay = 1;
-    spotLight.distance = 100;
-     
-    const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, 10, 0); 
-    spotLight.target = targetObject;
-    group.add(spotLight);
-    group.add(targetObject);
-
     group.userData.rotationSpeed = 0.01; 
-    group.name = "Surface2";
-    group.userData.spotLight = spotLight;
 }
 
 function addSurface3(obj, x, y, z, radius, i) {
     // Piramide quadrangular
-    
-    angle = segmentAngle * i;         // Calcula o ângulo para a posição i
-    
-    material = new THREE.MeshBasicMaterial({color: addColor(i), wireframe: true});
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
     const group = new THREE.Group();
 
     for (let faceIndex = 0; faceIndex < 6; faceIndex++) {
         const faceGeometry = new PARAMETRIC.ParametricGeometry((u, v, target) => {
             quadPyramid(u, v, target, faceIndex);
-        }, 10, 10);
+        }, 32, 32);
 
         const faceMesh = new THREE.Mesh(faceGeometry, material);
         group.add(faceMesh); 
@@ -403,201 +380,136 @@ function addSurface3(obj, x, y, z, radius, i) {
 
     group.position.set(
         x + radius * Math.cos(angle),
-        y + 1, 
+        y + 0.5, 
         z + radius * Math.sin(angle));
+    group.rotateZ(Math.PI/8);
     obj.add(group);
-
-    const spotLight = new THREE.SpotLight(0xffffff);
-    spotLight.position.set(0, -3, 0);
-    spotLight.angle = Math.PI / 2;
-    spotLight.penumbra = 0.5;
-    spotLight.decay = 1;
-    spotLight.distance = 100;
-     
-    const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, 10, 0); 
-    spotLight.target = targetObject;
-    group.add(spotLight);
-    group.add(targetObject);
-
-
+    group.name = "quadPyramid";
     group.userData.rotationSpeed = 0.01; 
-    group.name = "Surface3";
-    group.userData.spotLight = spotLight;
 }
 
 function addSurface4(obj, x, y, z, radius, i) {
     // Cylinder with different radius surface
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
 
-    angle = segmentAngle * i;         // Calcula o ângulo para a posição i
-
-    geometry = new PARAMETRIC.ParametricGeometry(coneCutted,32,32);
-    material = new THREE.MeshBasicMaterial({color: addColor(i), wireframe: true});
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(
-        x + radius * Math.cos(angle),
-        y, 
-        z + radius * Math.sin(angle));
-    obj.add(mesh);
-
-    const spotLight = new THREE.SpotLight(0xffffff);
-    spotLight.position.set(0, -3, 0);
-    spotLight.angle = Math.PI / 2;
-    spotLight.penumbra = 0.5;
-    spotLight.decay = 1;
-    spotLight.distance = 100;
-     
-    const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, 10, 0); 
-    spotLight.target = targetObject;
-    mesh.add(spotLight);
-    mesh.add(targetObject);
-
-    mesh.userData.rotationSpeed = 0.01; 
-    mesh.name = "Surface4";
-    mesh.userData.spotLight = spotLight;
-}
-
-function addSurface5(obj, x, y, z, radius, i) {
-    // Cone surface
-
-    angle = segmentAngle * i;         // Calcula o ângulo para a posição i
-    
-    geometry = new PARAMETRIC.ParametricGeometry(cone,32,32);
-    material = new THREE.MeshBasicMaterial({color: addColor(i), wireframe: true});
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(
-        x + radius * Math.cos(angle),
-        y, 
-        z + radius * Math.sin(angle));
-    obj.add(mesh);
-
-    const spotLight = new THREE.SpotLight(0xffffff);
-    spotLight.position.set(0, -3, 0);
-    spotLight.angle = Math.PI / 2;
-    spotLight.penumbra = 0.5;
-    spotLight.decay = 1;
-    spotLight.distance = 100;
-     
-    const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, 10, 0); 
-    spotLight.target = targetObject;
-    mesh.add(spotLight);
-    mesh.add(targetObject);
-
-    mesh.userData.rotationSpeed = 0.01;
-    mesh.name = "Surface5";
-    mesh.userData.spotLight = spotLight;
-}
-
-function addSurface6(obj, x, y, z, radius, i) {
-    // Prisma Hexagonal
-
-    angle = segmentAngle * i;         // Calcula o ângulo para a posição i
-
-    geometry = new PARAMETRIC.ParametricGeometry(hexagonalPrism,10,10);
-    material = new THREE.MeshBasicMaterial({color: addColor(i), wireframe: true});
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(
-        x + radius * Math.cos(angle),
-        y, 
-        z + radius * Math.sin(angle));
-    obj.add(mesh);
-
-    const spotLight = new THREE.SpotLight(0xffffff);
-    spotLight.position.set(0, -3, 0);
-    spotLight.angle = Math.PI / 2;
-    spotLight.penumbra = 0.5;
-    spotLight.decay = 1;
-    spotLight.distance = 100;
-     
-    const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, 10, 0); 
-    spotLight.target = targetObject;
-    mesh.add(spotLight);
-    mesh.add(targetObject);
-
-    mesh.userData.rotationSpeed = 0.01; 
-    mesh.name = "Surface6";
-    mesh.userData.spotLight = spotLight;
-}
-
-function addSurface7(obj, x, y, z, radius, i) {
-    // Superficie regrada 1 - hiperboloide
-
-    angle = segmentAngle * i;         // Calcula o ângulo para a posição i
-    
-    geometry = new PARAMETRIC.ParametricGeometry(rulledSurface1, 64, 64);
-    material = new THREE.MeshBasicMaterial({color: addColor(i), wireframe: true});
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(
-        x + radius * Math.cos(angle),
-        y + 1, 
-        z + radius * Math.sin(angle));
-    obj.add(mesh);
-
-    const spotLight = new THREE.SpotLight(0xffffff);
-    spotLight.position.set(0, -3, 0);
-    spotLight.angle = Math.PI / 2;
-    spotLight.penumbra = 0.5;
-    spotLight.decay = 1;
-    spotLight.distance = 100;
-     
-    const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, 10, 0); 
-    spotLight.target = targetObject;
-    mesh.add(spotLight);
-    mesh.add(targetObject);
-
-    mesh.userData.rotationSpeed = 0.01;
-    mesh.name = "Surface7";
-    mesh.userData.spotLight = spotLight;
-}
-
-function addSurface8(obj, x, y, z, radius, i) {
-    // Superficie regrada 2 - helicoide
-
-    angle = segmentAngle * i; // Calcula o ângulo para a posição i
-
-    geometry = new PARAMETRIC.ParametricGeometry(rulledSurface2, 64, 64);
-    material = new THREE.MeshBasicMaterial({color: addColor(i), wireframe: true});
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(
-        x + radius * Math.cos(angle),
-        y + 1, 
-        z + radius * Math.sin(angle));
-
-    obj.add(mesh);
-
-    const spotLight = new THREE.SpotLight(0xffffff);
-    spotLight.position.set(0, -3, 0);
-    spotLight.angle = Math.PI / 2;
-    spotLight.penumbra = 0.5;
-    spotLight.decay = 1;
-    spotLight.distance = 100;
-     
-    const targetObject = new THREE.Object3D();
-    targetObject.position.set(0, 10, 0); 
-    spotLight.target = targetObject;
-    mesh.add(spotLight);
-    mesh.add(targetObject);
-
-    mesh.userData.rotationSpeed = 0.01;
-    mesh.name = "Surface8";
-    mesh.userData.spotLight = spotLight;
-}
-
-function addColor(i) {
     // Verde variando a luminosidade
     const hue = 120;                // 120° no modelo HSL para verde
     const saturation = 100;         // 100% de saturação para cores vivas
     const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
     const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
 
-    return color;
-} 
+    geometry = new PARAMETRIC.ParametricGeometry(coneCutted,32,32);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y+0.25, 
+        z + radius * Math.sin(angle));
 
-// E NECESSARIO UM ARRAY COM TODOS OS VERTICES DA FAIXA DE MOBIUS
+    mesh.rotateX(Math.PI / 6);
+    obj.add(mesh); 
+    mesh.name = "coneCutted";
+    mesh.userData.rotationSpeed = 0.01; 
+}
+
+function addSurface5(obj, x, y, z, radius, i) {
+    // Cone surface
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(cone,32,32);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y+1.5, 
+        z + radius * Math.sin(angle));
+    mesh.rotateZ(7*Math.PI / 6);
+    obj.add(mesh);
+    mesh.name = "cone";
+    mesh.userData.rotationSpeed = 0.01;
+}
+
+function addSurface6(obj, x, y, z, radius, i) {
+    // Prisma Hexagonal
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(hexagonalPrism,32,32);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y+0.5, 
+        z + radius * Math.sin(angle));
+    mesh.rotateX(Math.PI / 3);
+    obj.add(mesh);
+    mesh.name = "hexagonalPrism";
+    mesh.userData.rotationSpeed = 0.01; 
+}
+
+function addSurface7(obj, x, y, z, radius, i) {
+    // Superficie regrada 1 - hiperboloide
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(rulledSurface1, 64, 64);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y+0.5, 
+        z + radius * Math.sin(angle));
+    mesh.rotateZ(Math.PI / 2);
+    obj.add(mesh);
+    mesh.name = "rulledSurface1";
+    mesh.userData.rotationSpeed = 0.01;
+}
+
+function addSurface8(obj, x, y, z, radius, i) {
+    // Superficie regrada 2 - helicoide
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(rulledSurface2, 64, 64);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y+1, 
+        z + radius * Math.sin(angle));
+    mesh.rotateX(Math.PI / 3);
+    obj.add(mesh);
+    mesh.name = "rulledSurface2";
+    mesh.userData.rotationSpeed = 0.01;
+}
+
+//E NECESSARIO UM ARRAY COM TODOS OS VERTICES DA FAIXA DE MOBIUS
 // A FAIXA E CONSTITUIDA POR TRIANGULOS
 // OS VERTICES QUE TEM A FAIXA SAO OS VERTICES DO TRIANGULO
 // MAYBE USAR UM BUFFER GEOMETRY PARA ISTO
@@ -605,27 +517,16 @@ function addColor(i) {
 function createCarrousel(x, y, z){
     'use strict';
 
-    carrousel = new THREE.Object3D();
+    var carrousel = new THREE.Object3D();
 
     // Create groups for better manipulation
     r1Group = new THREE.Object3D();
     r2Group = new THREE.Object3D();
     r3Group = new THREE.Object3D();
-    const rsGroup = [r1Group, r2Group, r3Group];
+    rsGroup = [r1Group, r2Group, r3Group];
 
     addMobiusStrip(carrousel, 0, 12, 0);
     addCylinder(carrousel, 0, 0, 0, cylinderRadius, cylinderHeight);
-
-    // Calculate positions for point lights along the Möbius strip
-    const numLights = 8;
-    for (let i = 0; i < numLights; i++) {
-        const u = i / numLights;
-        const t = 0; // Adjust t if you want lights at different points along the strip's width
-        const vec = new THREE.Vector3();
-        mobiusFunction(u, t, vec); // Assuming your mobiusFunction updates the 'vec' with x, y, z coordinates
-
-        addPointLight(carrousel, vec.x, vec.y + 12, vec.z, 1, 0xffffff); // Adjust intensity and color as needed
-    }
 
     // Adds rings to each group
     carrousel.innerRing = addRing(r1Group, 0, ringsHeight/2, 0, r1InnerRadius); 
@@ -668,13 +569,6 @@ function addSkydome(x, y, z) {
     mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
     scene.add(mesh);
-}
-
-function addPointLight(obj, x, y, z, intensity, color) {
-    'use strict';
-    var pointLight = new THREE.PointLight(color, intensity);
-    pointLight.position.set(x, y, z);
-    obj.add(pointLight);
 }
 
 function createScene(){
@@ -755,12 +649,6 @@ function turnOffDirectionalLight() {
     }
 }
 
-function toggleSpotlight(mesh, turnOn) {
-    if (mesh.userData.spotLight) {
-        mesh.userData.spotLight.intensity = turnOn ? 1 : 0;
-    }
-}
-
 ////////////////////////
 /* CREATE OBJECT3D(S) */
 ////////////////////////
@@ -795,7 +683,13 @@ function updateMaterials() {
 
 function update(delta){
     'use strict';
-
+    for (let i = 0; i < rsGroup.length; i++) {
+        for (let j = 1; j < 9; j++) {
+            var s1 = rsGroup[i].children[j];
+            console.log(rsGroup[i]);
+            s1.rotateY(2 * delta);
+        }
+    }
     if(keyDDown) {}
     
     if (!key1Down) { 
@@ -836,37 +730,12 @@ function update(delta){
 
     if (keyRDown) { currentMaterialKey = 'normal'; updateMaterials(); }
 
-    if (keyTDown) { currentMaterialKey = 'basic'; updateMaterials(); }
-
-    if (keySDown) { 
-        toggleSpotlight(scene.getObjectByName("Surface1"), false); 
-        toggleSpotlight(scene.getObjectByName("Surface2"), false);
-        toggleSpotlight(scene.getObjectByName("Surface3"), false);
-        toggleSpotlight(scene.getObjectByName("Surface4"), false);
-        toggleSpotlight(scene.getObjectByName("Surface5"), false);
-        toggleSpotlight(scene.getObjectByName("Surface6"), false);
-        toggleSpotlight(scene.getObjectByName("Surface7"), false);
-        toggleSpotlight(scene.getObjectByName("Surface8"), false);
-    }
-    else {
-        toggleSpotlight(scene.getObjectByName("Surface1"), true);
-        toggleSpotlight(scene.getObjectByName("Surface2"), true);
-        toggleSpotlight(scene.getObjectByName("Surface3"), true);
-        toggleSpotlight(scene.getObjectByName("Surface4"), true);
-        toggleSpotlight(scene.getObjectByName("Surface5"), true);
-        toggleSpotlight(scene.getObjectByName("Surface6"), true);
-        toggleSpotlight(scene.getObjectByName("Surface7"), true);
-        toggleSpotlight(scene.getObjectByName("Surface8"), true);
-    }
-
-    scene.traverse(function(object) {
+    /*scene.traverse(function(object) {
         if (object.userData.rotationSpeed) {
             // Rotação constante em torno do eixo Y
             object.rotateY(object.userData.rotationSpeed * delta);
         }
-    });
-
-    carrousel.rotateY(0.05 * delta);
+    });*/
 }
 
 /////////////
@@ -965,12 +834,6 @@ function onKeyDown(e) {
         case 82: 
             keyRDown = true;
             break;
-        case 83:
-            keySDown = !keySDown;
-            break;
-        case 84:
-            keyTDown = true;
-            break;
         
     }
 
@@ -1009,9 +872,6 @@ function onKeyUp(e){
             break;
         case 82: 
             keyRDown = false;
-            break;
-        case 84:
-            keyTDown = false;
             break;
         
 
