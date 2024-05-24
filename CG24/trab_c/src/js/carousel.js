@@ -793,10 +793,20 @@ function turnOffDirectionalLight() {
     }
 }
 
-function toggleSpotlight(mesh, turnOn) {
-    if (mesh && mesh.userData && mesh.userData.spotLight) {
-        mesh.userData.spotLight.intensity = turnOn ? 1 : 0;
-    }
+function turnOffAllSpotLights(scene) {
+    scene.traverse(function(node) {
+        if (node instanceof THREE.SpotLight) {
+            node.intensity = 0; // Restore the original intensity
+        }
+    });
+}
+
+function turnOnAllSpotLights(scene) {
+    scene.traverse(function(node) {
+        if (node instanceof THREE.SpotLight) {
+            node.intensity = 1; // Restore the original intensity
+        }
+    });
 }
 
 ////////////////////////
@@ -885,24 +895,10 @@ function update(delta){
     if (keyTDown) { currentMaterialKey = 'basic'; updateMaterials(); }
 
     if (keySDown) { 
-        toggleSpotlight(scene.getObjectByName("cylinder"), false);
-        toggleSpotlight(scene.getObjectByName("parallelepiped"), false);
-        toggleSpotlight(scene.getObjectByName("quadPyramid"), false);
-        toggleSpotlight(scene.getObjectByName("coneCutted"), false);
-        toggleSpotlight(scene.getObjectByName("cone"), false);
-        toggleSpotlight(scene.getObjectByName("hexagonalPrism"), false);
-        toggleSpotlight(scene.getObjectByName("rulledSurface1"), false);
-        toggleSpotlight(scene.getObjectByName("rulledSurface2"), false);
+        turnOffAllSpotLights(scene);
     }
     else {
-        toggleSpotlight(scene.getObjectByName("cylinder"), true);
-        toggleSpotlight(scene.getObjectByName("parallelepiped"), true);
-        toggleSpotlight(scene.getObjectByName("quadPyramid"), true);
-        toggleSpotlight(scene.getObjectByName("coneCutted"), true);
-        toggleSpotlight(scene.getObjectByName("cone"), true);
-        toggleSpotlight(scene.getObjectByName("hexagonalPrism"), true);
-        toggleSpotlight(scene.getObjectByName("rulledSurface1"), true);
-        toggleSpotlight(scene.getObjectByName("rulledSurface2"), true);
+        turnOnAllSpotLights(scene);
     }
 
     /*scene.traverse(function(object) {
