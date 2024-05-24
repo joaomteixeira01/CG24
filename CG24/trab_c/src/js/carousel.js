@@ -712,6 +712,10 @@ function addSkydome(x, y, z) {
     const circleMesh = new THREE.Mesh(circleGeometry, material);
     circleMesh.rotation.x = Math.PI / 2;  
     circleMesh.position.set(x, y, z);  
+
+    mesh.name = 'skydome';
+    circleMesh.name = 'skydome';
+
     scene.add(circleMesh);
 }
 
@@ -737,9 +741,9 @@ function createCamera() {
                                         window.innerWidth / window.innerHeight,
                                          1,
                                          1000);
-    camera.position.x = 20;
-    camera.position.y = 20;
-    camera.position.z = 20;
+    camera.position.x = 12;
+    camera.position.y = 15;
+    camera.position.z = 12;
     camera.lookAt(scene.position); 
 
     // Top Camera 
@@ -835,7 +839,7 @@ function handleCollisions(){
 
 function updateMaterials() {
     scene.traverse(function (object) {
-        if (object.isMesh) {
+        if (object.isMesh && object.name !== 'skydome' ) {
             object.material = materials[currentMaterialKey];
         }
     });
