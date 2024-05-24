@@ -85,6 +85,12 @@ var heightCone = 2;
 var radiusHexagonalPrism = 1;
 var heightHexagonalPrism = 2;
 
+// Surface 7 Dimensions - Rulled Surface 1
+var rulledSurface1Dim = 0.07;
+
+// Surface 8 Dimensions - Rulled Surface 2
+var rulledSurface2Dim = 0.12;
+
 var r1Direction = 1; // 1 para subir, -1 para descer
 var r2Direction = 1; // Inicialmente subindo
 var r3Direction = 1;
@@ -263,11 +269,30 @@ function hexagonalPrism(u, v, target) {
 }
 
 function rulledSurface1(u, v, target) {
-
+    
+    u = (u - 0.5) * 2 * Math.PI; // u range adjusted to fit the desired size
+    v = v * 2 * Math.PI; // v range to cover full rotation
+   
+    const coshU = Math.cosh(u);
+    const sinhU = Math.sinh(u);
+   
+    const x = rulledSurface1Dim * coshU * Math.cos(v);
+    const y = rulledSurface1Dim * sinhU;
+    const z = rulledSurface1Dim * coshU * Math.sin(v);
+   
+    target.set(x, y, z);
 }
 
 function rulledSurface2(u, v, target) {
 
+    u = u * 4 * Math.PI; // Multiplicado para várias voltas
+    v = v * 2 * Math.PI; // Multiplicado para cobrir uma volta completa
+
+    const x = rulledSurface2Dim * v * Math.cos(u);
+    const y = rulledSurface2Dim * v * Math.sin(u);
+    const z = rulledSurface2Dim * u;
+
+    target.set(x, y, z);
 }
 
 function addSurface1(obj, x, y, z, radius, i) {
@@ -426,12 +451,49 @@ function addSurface6(obj, x, y, z, radius, i) {
 }
 
 function addSurface7(obj, x, y, z, radius, i) {
-    // Superficie regrada 1
+    // Superficie regrada 1 - hiperboloide
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(rulledSurface1, 64, 64);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y, 
+        z + radius * Math.sin(angle));
+
+    obj.add(mesh);
+    mesh.userData.rotationSpeed = 0.01;
 }
 
 function addSurface8(obj, x, y, z, radius, i) {
-    // Superficie regrada 2
-    
+    // Superficie regrada 2 - helicoide
+    const segmentAngle = 2 * Math.PI / 8; // Cada segmento é de 45 graus
+    const angle = segmentAngle * i; // Calcula o ângulo para a posição i
+
+    // Verde variando a luminosidade
+    const hue = 120;                // 120° no modelo HSL para verde
+    const saturation = 100;         // 100% de saturação para cores vivas
+    const lightness = 30 + 5 * i;   // Varia de 30% a 70% para 8 superfícies
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Matiz e saturação são fixos, apenas a luminosidade varia
+
+    geometry = new PARAMETRIC.ParametricGeometry(rulledSurface2, 64, 64);
+    material = new THREE.MeshBasicMaterial({color: color, wireframe: true});
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+        x + radius * Math.cos(angle),
+        y, 
+        z + radius * Math.sin(angle));
+
+    obj.add(mesh);
+    mesh.userData.rotationSpeed = 0.01;
 }
 
 //E NECESSARIO UM ARRAY COM TODOS OS VERTICES DA FAIXA DE MOBIUS
@@ -465,8 +527,8 @@ function createCarrousel(x, y, z){
         addSurface4(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 3);
         addSurface5(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 4);
         addSurface6(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 5);
-        //addSurface7(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 6);
-        //addSurface8(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 7);
+        addSurface7(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 6);
+        addSurface8(rsGroup[i], 0, 2.5, 0, rsInnerRadius[i]+(ringsWidth/2), 7);
     }
 
     // Adds groups to the Carrousel
