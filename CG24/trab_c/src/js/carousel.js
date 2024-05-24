@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as PARAMETRIC from 'parametric';
+import * as VRButton from 'vrbutton';
 /*import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import * as Stats from 'three/addons/libs/stats.module.js';
@@ -935,6 +936,14 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
+
+    const vrButton = VRButton.createButton(renderer);
+    document.body.appendChild(vrButton);
+
+   
+    renderer.xr.enabled = true;
+
+
     createScene();
     createCamera();
     activeCamera = camera;
@@ -956,7 +965,13 @@ function animate() {
 
     const delta = clock.getDelta();
 
-    requestAnimationFrame(animate);
+    //requestAnimationFrame(animate);
+
+    renderer.setAnimationLoop( function () {
+
+        renderer.render( scene, camera );
+    
+    } );
 
     update(delta);
     render();
